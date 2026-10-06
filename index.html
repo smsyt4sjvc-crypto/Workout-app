@@ -38,7 +38,15 @@
     position: sticky; top: 0; z-index: 10; background: var(--bg);
     padding: calc(10px + env(safe-area-inset-top)) 16px 10px; border-bottom: 1px solid var(--line);
   }
-  .top h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: .2px; }
+  .titlebar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .top h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: .2px; white-space: nowrap; }
+  #who {
+    -webkit-appearance: none; appearance: none; min-width: 0; max-width: 60%; min-height: 36px;
+    padding: 6px 30px 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--text);
+    background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2398a2ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 11px center / 12px 8px;
+    font: inherit; font-size: 16px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+  }
+  #who.unset { color: var(--accent); border-color: var(--accent); }
   .top .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
   .actions { display: flex; gap: 8px; margin-top: 10px; }
   .actions button {
@@ -127,7 +135,10 @@
 <body>
 
 <div class="top">
-  <h1>EXM‑3700LP</h1>
+  <div class="titlebar">
+    <h1>EXM‑3700LP</h1>
+    <select id="who" aria-label="Whose log"></select>
+  </div>
   <div class="sub" id="stats">Loading…</div>
   <div class="actions">
     <button class="primary" id="copyAll">Copy all</button>
@@ -140,7 +151,8 @@
 <footer>
   Body‑Solid EXM‑3700LP · two 210 lb stacks in 10 lb plates · leg press 2:1<br>
   Photos and steps from the Body‑Solid G9S exercise chart (same stations). Tap a picture for the how‑to.<br>
-  Logs are saved on this device until you tap Reset. Copy them somewhere safe now and then.
+  Logs are saved on this device until you tap Reset. Copy them somewhere safe now and then.<br>
+  Each person's log is separate — switch with the name at the top.
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -599,18 +611,38 @@
   GROUPS.forEach(g => g.exercises.forEach(e => { EX[e.id] = e; }));
 
   // ---- Storage ---------------------------------------------------------------
+  // Each person's sets and selections live under their own key. The first person keeps the
+  // original key, so a log saved before names existed simply becomes theirs.
   const KEY = 'exm3700lp.v1';
+  const PEOPLE_KEY = 'exm3700lp.people';
+  let people = loadPeople();   // { list: [{ key, name }], current: key }
   let state = load();
+
+  function loadPeople() {
+    try {
+      const p = JSON.parse(localStorage.getItem(PEOPLE_KEY));
+      if (p && Array.isArray(p.list) && p.list.length) {
+        if (!p.list.some(x => x.key === p.current)) p.current = p.list[0].key;
+        return p;
+      }
+    } catch (e) { /* fall through */ }
+    return { list: [{ key: KEY, name: '' }], current: KEY };
+  }
+  function savePeople() {
+    try { localStorage.setItem(PEOPLE_KEY, JSON.stringify(people)); }
+    catch (e) { toast('Could not save — is storage blocked?'); }
+  }
+  const me = () => people.list.find(p => p.key === people.current);
 
   function load() {
     try {
-      const s = JSON.parse(localStorage.getItem(KEY));
+      const s = JSON.parse(localStorage.getItem(people.current));
       if (s && Array.isArray(s.entries)) return { entries: s.entries, sel: s.sel || {} };
     } catch (e) { /* fall through */ }
     return { entries: [], sel: {} };
   }
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    try { localStorage.setItem(people.current, JSON.stringify(state)); }
     catch (e) { toast('Could not save — is storage blocked?'); }
   }
   function sel(exId) {
@@ -653,6 +685,7 @@
       </section>`).join('');
     GROUPS.forEach(g => g.exercises.forEach(e => renderCard(e.id)));
     renderStats();
+    renderWho();
   }
 
   function cardHTML(ex) {
@@ -795,7 +828,7 @@
     const byDate = {};
     entries.forEach(e => (byDate[e.date] = byDate[e.date] || []).push(e));
     const dates = Object.keys(byDate).sort();
-    const lines = [`EXM-3700LP workout log`, `Exported ${nowStamp()} · ${entries.length} set${entries.length === 1 ? '' : 's'}`];
+    const lines = [`EXM-3700LP workout log${me().name ? ' · ' + me().name : ''}`, `Exported ${nowStamp()} · ${entries.length} set${entries.length === 1 ? '' : 's'}`];
     dates.forEach(date => {
       lines.push('', `${date} ${dayName(date)}`);
       const byEx = {};
@@ -835,17 +868,80 @@
 
   document.getElementById('copyAll').addEventListener('click', () => {
     if (!state.entries.length) return toast('Nothing logged yet');
+    askNameOnce();
     copyText(formatLog(state.entries), `${state.entries.length} set${state.entries.length === 1 ? '' : 's'}`);
   });
   document.getElementById('copyToday').addEventListener('click', () => {
     const t = state.entries.filter(e => e.date === today());
     if (!t.length) return toast('Nothing logged today');
+    askNameOnce();
     copyText(formatLog(t), `today (${t.length} set${t.length === 1 ? '' : 's'})`);
   });
   document.getElementById('reset').addEventListener('click', () => {
-    if (!confirm(`Delete all ${state.entries.length} logged sets and your plate/rep selections?\n\nCopy the log first if you still need it.`)) return;
+    const n = state.entries.length, who = me().name ? ` for ${me().name}` : '';
+    if (!confirm(`Delete all ${n} logged set${n === 1 ? '' : 's'}${who} and the plate/rep selections?\n\nCopy the log first if you still need it.`)) return;
     state = { entries: [], sel: {} };
     save(); build(); toast('Reset');
+  });
+
+  // ---- People ----------------------------------------------------------------
+  const whoEl = document.getElementById('who');
+  const label = p => p.name || 'this person';
+
+  function renderWho() {
+    const cur = me();
+    whoEl.innerHTML =
+      people.list.map(p => `<option value="${esc(p.key)}">${esc(p.name || 'Set your name')}</option>`).join('') +
+      '<option disabled>──────────</option>' +
+      `<option value="__rename">${cur.name ? 'Rename ' + esc(cur.name) + '…' : 'Set your name…'}</option>` +
+      '<option value="__add">Add a person…</option>' +
+      (people.list.length > 1 ? `<option value="__remove">Remove ${esc(label(cur))}…</option>` : '');
+    whoEl.value = people.current;
+    whoEl.classList.toggle('unset', !cur.name);
+  }
+
+  // Returns a trimmed name nobody else on this phone has, or '' if cancelled / blank / taken.
+  // `forKey` is the person being named (null when adding someone new).
+  function askName(message, current, forKey) {
+    const raw = prompt(message, current || '');
+    const name = raw == null ? '' : raw.trim().replace(/\s+/g, ' ').slice(0, 30);
+    if (!name) return '';
+    const clash = people.list.find(p => p.key !== forKey && p.name.toLowerCase() === name.toLowerCase());
+    if (clash) { toast(`There's already a log for ${clash.name}`); return ''; }
+    return name;
+  }
+  // The copied log names whose it is, so ask once if this person has no name yet. Copy goes ahead either way.
+  function askNameOnce() {
+    if (me().name) return;
+    const name = askName('Whose log is this? The name goes at the top of the copied log.', '', people.current);
+    if (name) { me().name = name; savePeople(); renderWho(); }
+  }
+  function switchTo(key) {
+    people.current = key; savePeople();
+    state = load(); build();
+    toast(me().name ? `Logging for ${me().name}` : 'Logging for a new person');
+  }
+
+  whoEl.addEventListener('change', () => {
+    const v = whoEl.value;
+    whoEl.value = people.current;   // snap back; whatever happens next re-renders
+    if (v === '__rename') {
+      const name = askName(me().name ? `Rename ${me().name} to:` : 'Your name:', me().name, people.current);
+      if (name) { me().name = name; savePeople(); renderWho(); }
+    } else if (v === '__add') {
+      const name = askName('Name of the person to add:', '', null);
+      if (!name) return;
+      const p = { key: KEY + '.' + uid(), name };
+      people.list.push(p); switchTo(p.key);
+    } else if (v === '__remove') {
+      const p = me(), n = state.entries.length;
+      if (!confirm(`Remove ${label(p)} from this phone${n ? ` and delete their ${n} logged set${n === 1 ? '' : 's'}` : ''}?\n\nCopy their log first if you still need it.`)) return;
+      try { localStorage.removeItem(p.key); } catch (e) { /* already gone */ }
+      people.list = people.list.filter(x => x !== p);
+      switchTo(people.list[0].key);
+    } else if (v && v !== people.current) {
+      switchTo(v);
+    }
   });
   document.getElementById('fallbackClose').addEventListener('click', () => document.getElementById('fallback').close());
   const how = document.getElementById('how');

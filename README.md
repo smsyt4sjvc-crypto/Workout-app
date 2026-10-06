@@ -9,9 +9,18 @@ A one‑page, offline‑capable set logger for the **Body‑Solid EXM‑3700LP**
 2. Add it to your home screen:
    - **iPhone / iPad (Safari):** Share → *Add to Home Screen*.
    - **Android (Chrome):** ⋮ menu → *Add to Home screen* / *Install app*.
-3. In the gym: pick the exercise, set **Plates** and **Reps**, tap **Log set**. Each tap records one set with today's date. Tap **×** on a set to remove it. The card shows today's sets and what you did last session. Tap the picture (or **How to ›**) for a larger photo and the numbered steps.
-4. Afterwards: **Copy all** (or **Copy today**) and paste into [`LOG.md`](LOG.md) or your notes.
-5. **Reset** wipes every logged set and your plate/rep selections. It asks first.
+3. Set your name with the picker at the top right (it also asks the first time you copy).
+4. In the gym: pick the exercise, set **Plates** and **Reps**, tap **Log set**. Each tap records one set with today's date. Tap **×** on a set to remove it. The card shows today's sets and what you did last session. Tap the picture (or **How to ›**) for a larger photo and the numbered steps.
+5. Afterwards: **Copy all** (or **Copy today**) and paste it into the chat with Claude to be saved to your file in [`logs/`](logs/), or into your notes.
+6. **Reset** wipes the logged sets and plate/rep selections of whoever is selected. It asks first.
+
+## More than one person
+
+Everyone uses the same app and link; each person's sets are kept apart.
+
+- **On their own phone** (simplest): they add the app to their home screen and set their name. Phones never share data.
+- **Sharing one phone:** use the name picker → *Add a person…*, then switch between names. Each name has its own sets, plate/rep settings and Reset. *Remove …* deletes that person's log from the phone.
+- **In the repo:** one file per person in `logs/`, named after the name at the top of the copied log (`· Jenn` → `logs/jenn.md`). All on `main`. No branches, because GitHub Pages serves a single branch and the app is the same for everyone.
 
 ## Exercises
 
@@ -33,20 +42,20 @@ Each stack is 210 lb in 10 lb plates (max 21). The leg press runs a 2:1 ratio, s
 ## Copied log format
 
 ```
-EXM-3700LP workout log
+EXM-3700LP workout log · Jenn
 Exported 2026-10-06 18:02 · 5 sets
 
-2026-10-06 Mon
-- Bench Press: 8 plates / 80 lb × 12, 10 | 9 plates / 90 lb × 8
+2026-10-06 Tue
+- Chest Press: 8 plates / 80 lb × 12, 10 | 9 plates / 90 lb × 8
 - Leg Press: 12 plates / 120 lb stack · 240 lb press × 15
 - Dips: bodyweight × 12
 ```
 
-Sets are listed in the order you logged them; consecutive sets at the same weight share one `×` list.
+The first line names whose log it is. Sets are listed in the order you logged them; consecutive sets at the same weight share one `×` list.
 
 ## Where the data lives
 
-In the browser's `localStorage` for this site, on that device only. It survives closing the app and restarting the phone, but **clearing Safari/Chrome site data deletes it**, so copy the log out regularly. The service worker caches the page so it opens with no signal.
+In the browser's `localStorage` for this site, on that device only, with a separate slot per person (`exm3700lp.people` lists the names). It survives closing the app and restarting the phone, but **clearing Safari/Chrome site data deletes it**, so copy the log out regularly. The service worker caches the page so it opens with no signal.
 
 ## Turning on GitHub Pages (one time)
 
@@ -57,4 +66,4 @@ Repo **Settings → Pages → Build and deployment → Source: "Deploy from a br
 - `index.html` — the whole app (HTML, CSS, JS; no dependencies)
 - `img/` — one photo per exercise from the Body‑Solid chart, plus two drawings from the manual
 - `manifest.webmanifest`, `sw.js`, `icons/` — home‑screen install and offline cache (photos included)
-- `LOG.md` — paste copied logs here to track them in the repo
+- `logs/` — one saved log per person (`logs/<name>.md`)
