@@ -9,23 +9,26 @@ A one‑page, offline‑capable set logger for the **Body‑Solid EXM‑3700LP**
 2. Add it to your home screen:
    - **iPhone / iPad (Safari):** Share → *Add to Home Screen*.
    - **Android (Chrome):** ⋮ menu → *Add to Home screen* / *Install app*.
-3. In the gym: pick the exercise, set **Plates** and **Reps**, tap **Log set**. Each tap records one set with today's date. Tap **×** on a set to remove it. The card shows today's sets and what you did last session.
+3. In the gym: pick the exercise, set **Plates** and **Reps**, tap **Log set**. Each tap records one set with today's date. Tap **×** on a set to remove it. The card shows today's sets and what you did last session. Tap the picture (or **How to ›**) for a larger photo and the numbered steps.
 4. Afterwards: **Copy all** (or **Copy today**) and paste into [`LOG.md`](LOG.md) or your notes.
 5. **Reset** wipes every logged set and your plate/rep selections. It asks first.
 
 ## Exercises
 
-| Station | Exercises |
-| --- | --- |
-| Multi‑Press | Bench Press · Incline Press · Shoulder Press · Chest‑Supported Mid Row |
-| Pec Fly / Rear Delt | Pec Fly · Rear Delt Fly |
-| Lat Pulldown / High Pulley | Lat Pulldown · Triceps Pushdown · Cable Ab Crunch |
-| Seated Row / Low Pulley | Seated Row · Biceps Curl · Upright Row · Shrug |
-| Leg Extension / Leg Curl | Leg Extension · Leg Curl |
-| Leg Press / Calf Press (2:1) | Leg Press · Calf Press |
-| GKR9 (bodyweight) | Vertical Knee Raise · Dips |
+Grouped as on the Body‑Solid exercise chart. The photo and the numbered steps for each come from the Body‑Solid G9S chart (`img/*.jpg`), which has the same stations as the EXM‑3700LP; the three marked * are not on the chart, so they carry standard form cues and a drawing from the owner's manual instead.
 
-Each stack is 210 lb in 10 lb plates (max 21). The leg press runs a 2:1 ratio, so the app shows both the stack weight and the pressed weight. To change exercises or plate weight, edit `STATIONS`, `PLATE_LB` and `MAX_PLATES` near the top of the script in `index.html`.
+| Group | Exercises |
+| --- | --- |
+| Chest | Chest Press · Incline Press · Pectoral Fly |
+| Shoulders | Standing Shoulder Press · Upright Row · Lateral Deltoid Raise |
+| Back | Lat Pull Down · Back Hyperextension · Chest Supported Mid Row · Seated Row * |
+| Arms | Biceps Curl · Triceps Press Down · Triceps Extension |
+| Abs | Resistance Ab Crunch · Oblique Crunch · Oblique Bend |
+| Hips / Thighs | Leg Abduction · Glute Kickback · Leg Press (2:1) |
+| Legs | Leg Extension · Standing Leg Curl · Calf Press (2:1) |
+| GKR9 (bodyweight) | Vertical Knee Raise * · Dips * |
+
+Each stack is 210 lb in 10 lb plates (max 21). The leg press runs a 2:1 ratio, so the app shows both the stack weight and the pressed weight. To change exercises, steps or plate weight, edit `GROUPS`, `PLATE_LB` and `MAX_PLATES` near the top of the script in `index.html`.
 
 ## Copied log format
 
@@ -52,5 +55,6 @@ Repo **Settings → Pages → Build and deployment → Source: "Deploy from a br
 ## Files
 
 - `index.html` — the whole app (HTML, CSS, JS; no dependencies)
-- `manifest.webmanifest`, `sw.js`, `icons/` — home‑screen install and offline cache
+- `img/` — one photo per exercise from the Body‑Solid chart, plus two drawings from the manual
+- `manifest.webmanifest`, `sw.js`, `icons/` — home‑screen install and offline cache (photos included)
 - `LOG.md` — paste copied logs here to track them in the repo

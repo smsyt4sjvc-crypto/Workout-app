@@ -1,6 +1,9 @@
 // Offline support: network first (so updates land immediately), cached copy as fallback.
-const CACHE = 'exm3700lp-v1';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const CACHE = 'exm3700lp-v2';
+const IMAGES = ['bench', 'incline', 'pecfly', 'shoulder', 'upright', 'latraise', 'latpull', 'backext', 'midrow', 'row',
+  'curl', 'tripush', 'triext', 'abcrunch', 'obcrunch', 'obbend', 'legabd', 'glute', 'legpress', 'legext', 'legcurl', 'calf', 'gkr9']
+  .map(n => `./img/${n}.jpg`);
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', ...IMAGES];
 
 self.addEventListener('install', ev => {
   ev.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

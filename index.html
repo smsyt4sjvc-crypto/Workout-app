@@ -54,18 +54,21 @@
     background: var(--card); color: var(--text); text-decoration: none; font-size: 13px; white-space: nowrap;
   }
 
-  /* Stations & cards */
+  /* Groups & cards */
   main { padding: 0 16px; }
-  section.station { margin-top: 22px; scroll-margin-top: 150px; }
-  section.station h2 { margin: 0 0 2px; font-size: 17px; }
-  section.station .note { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  section.group { margin-top: 22px; scroll-margin-top: 150px; }
+  section.group h2 { margin: 0 0 2px; font-size: 17px; }
+  section.group .note { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
   .ex {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
     padding: 14px; margin-bottom: 12px;
   }
-  .ex header { margin-bottom: 10px; }
+  .ex header { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: center; margin-bottom: 10px; }
+  .thumb { width: 72px; height: 96px; padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--card2); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .ex h3 { margin: 0; font-size: 17px; }
   .ex .muscles { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .how { margin-top: 6px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--card2); font-size: 13px; font-weight: 600; }
   .row { display: grid; grid-template-columns: 58px auto 1fr; align-items: center; gap: 10px; margin: 8px 0; }
   .row label { color: var(--muted); font-size: 14px; }
   .stepper { display: inline-flex; align-items: stretch; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--card2); }
@@ -91,17 +94,23 @@
   .set button { border: 0; background: transparent; color: var(--muted); font-size: 16px; width: 28px; height: 26px; line-height: 1; border-radius: 6px; }
   .set button:active { color: var(--danger); }
 
-  /* Toast & fallback dialog */
+  /* Toast & dialogs */
   .toast {
     position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
     background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 600;
     opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 20; max-width: calc(100vw - 32px); text-align: center;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  dialog { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--text); width: min(92vw, 520px); padding: 16px; }
-  dialog::backdrop { background: rgba(0,0,0,.5); }
+  dialog { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--text); width: min(94vw, 560px); padding: 16px; max-height: 92vh; overflow: auto; }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
   dialog textarea { width: 100%; height: 40vh; font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; background: var(--card2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
   dialog .actions { margin-top: 10px; }
+  #how img { display: block; width: 100%; max-height: 44vh; object-fit: contain; border-radius: 10px; background: var(--card2); }
+  #how h3 { margin: 12px 0 2px; font-size: 19px; }
+  #how .meta { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+  #how ol { margin: 0; padding-left: 22px; font-size: 15px; line-height: 1.45; }
+  #how li { margin: 6px 0; }
+  #how .src { color: var(--muted); font-size: 12px; margin: 12px 0 0; }
   footer { color: var(--muted); font-size: 12px; text-align: center; padding: 28px 16px 0; line-height: 1.6; }
 </style>
 </head>
@@ -120,6 +129,7 @@
 <main id="main"></main>
 <footer>
   Body‑Solid EXM‑3700LP · two 210 lb stacks in 10 lb plates · leg press 2:1<br>
+  Photos and steps from the Body‑Solid G9S exercise chart (same stations). Tap a picture for the how‑to.<br>
   Logs are saved on this device until you tap Reset. Copy them somewhere safe now and then.
 </footer>
 
@@ -128,6 +138,14 @@
   <p style="margin:0 0 8px">Couldn't reach the clipboard. Select all and copy:</p>
   <textarea id="fallbackText" readonly></textarea>
   <div class="actions"><button id="fallbackClose">Close</button></div>
+</dialog>
+<dialog id="how" aria-labelledby="howTitle">
+  <img id="howImg" alt="">
+  <h3 id="howTitle"></h3>
+  <p class="meta" id="howMeta"></p>
+  <ol id="howSteps"></ol>
+  <p class="src" id="howSrc"></p>
+  <div class="actions"><button id="howClose">Close</button></div>
 </dialog>
 
 <script>
@@ -139,50 +157,430 @@
   const MAX_PLATES = 21;   // 210 lb stack
   const MAX_REPS = 99;
 
-  const STATIONS = [
-    { id: 'press', name: 'Multi‑Press Station', note: 'Adjustable press arm.',
-      exercises: [
-        { id: 'bench',    name: 'Bench Press',             muscles: 'Chest · Triceps' },
-        { id: 'incline',  name: 'Incline Press',           muscles: 'Upper chest · Shoulders' },
-        { id: 'shoulder', name: 'Shoulder Press',          muscles: 'Shoulders · Triceps' },
-        { id: 'midrow',   name: 'Chest‑Supported Mid Row', muscles: 'Upper back · Rear delts' },
-      ] },
-    { id: 'pec', name: 'Pec Fly / Rear Delt Station', note: 'Swing‑arm pads, adjustable start position.',
-      exercises: [
-        { id: 'pecfly',   name: 'Pec Fly',       muscles: 'Chest' },
-        { id: 'reardelt', name: 'Rear Delt Fly', muscles: 'Rear delts · Upper back' },
-      ] },
-    { id: 'high', name: 'Lat Pulldown / High Pulley', note: 'Lat bar or ab strap on the top pulley.',
-      exercises: [
-        { id: 'latpull',  name: 'Lat Pulldown',     muscles: 'Lats · Biceps' },
-        { id: 'tripush',  name: 'Triceps Pushdown', muscles: 'Triceps' },
-        { id: 'abcrunch', name: 'Cable Ab Crunch',  muscles: 'Abs' },
-      ] },
-    { id: 'low', name: 'Seated Row / Low Pulley', note: 'Low row bar on the chain at floor level.',
-      exercises: [
-        { id: 'row',     name: 'Seated Row',  muscles: 'Mid back · Lats' },
-        { id: 'curl',    name: 'Biceps Curl', muscles: 'Biceps' },
-        { id: 'upright', name: 'Upright Row', muscles: 'Shoulders · Traps' },
-        { id: 'shrug',   name: 'Shrug',       muscles: 'Traps' },
-      ] },
-    { id: 'legdev', name: 'Leg Extension / Leg Curl', note: 'Foam‑roller leg developer on the seat.',
-      exercises: [
-        { id: 'legext',  name: 'Leg Extension', muscles: 'Quads' },
-        { id: 'legcurl', name: 'Leg Curl',      muscles: 'Hamstrings' },
-      ] },
-    { id: 'legpress', name: 'Leg Press / Calf Press', note: '2:1 ratio — you push double what the stack says (up to 420 lb).',
-      exercises: [
-        { id: 'legpress', name: 'Leg Press',  muscles: 'Quads · Glutes', ratio: 2 },
-        { id: 'calf',     name: 'Calf Press', muscles: 'Calves',         ratio: 2 },
-      ] },
-    { id: 'gkr9', name: 'GKR9 Knee Raise / Dip Station', note: 'Bodyweight — reps only.',
-      exercises: [
-        { id: 'kneeraise', name: 'Vertical Knee Raise', muscles: 'Abs · Hip flexors', bodyweight: true },
-        { id: 'dips',      name: 'Dips',                muscles: 'Chest · Triceps',   bodyweight: true },
-      ] },
+  // Exercises, grouped as on the Body-Solid exercise chart. Each has a photo (img) and the chart's
+  // numbered steps; the few not on the chart carry their own cues and say so (src).
+  const GROUPS = /*__GROUPS__*/[
+    {
+      "id": "chest",
+      "name": "Chest",
+      "exercises": [
+        {
+          "id": "bench",
+          "name": "Chest Press",
+          "muscles": "Pectorals",
+          "img": "img/bench.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Adjust Press Arm to the Chest Press position and set back pad to the fully retracted flat position.",
+            "Adjust seat pad height so that when seated, the horizontal press handles are even with the chest (pectoral) muscles.",
+            "Sit comfortably on the seat pad with your back flat against the back pad.",
+            "Grasp horizontal press handles with your arms bent and palms facing downward.",
+            "Keeping your elbows out and below your shoulders, extend your arms forward at a smooth, moderate pace throughout the exercise movement.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "incline",
+          "name": "Incline Press",
+          "muscles": "Pectorals",
+          "img": "img/incline.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Adjust Press Arm to the Incline Press position and extend the back pad to angle your torso slightly forward.",
+            "Adjust seat pad height so that when seated, the upper horizontal press handles bisect the chest (pectoral) muscles.",
+            "Grasp upper horizontal press handles with your arms bent and palms facing downward.",
+            "Keeping your elbows out and below your shoulders, extend your arms forward at a smooth, moderate pace throughout the exercise movement.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "pecfly",
+          "name": "Pectoral Fly",
+          "muscles": "Pectorals",
+          "img": "img/pecfly.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Adjust seat pad height so that when seated, the pec arm handles are approximately shoulder level and your arms are parallel with the floor.",
+            "Sit comfortably on the seat pad with your back flat against the back pad.",
+            "Reach back and grasp the Pec Arm handles on each side.",
+            "Use Chest muscle strength to bring your arms forward and toward each other.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shoulders",
+      "name": "Shoulders",
+      "exercises": [
+        {
+          "id": "shoulder",
+          "name": "Standing Shoulder Press",
+          "muscles": "Deltoids",
+          "img": "img/shoulder.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Adjust Press Arm to the Standing Shoulder Press position.",
+            "Stand facing into the machine and between press handles.",
+            "Grasp horizontal press handles with your arms bent and palms facing forward.",
+            "Keeping your elbows out, extend your arms upward at a smooth, moderate pace throughout the exercise movement.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "upright",
+          "name": "Upright Row",
+          "muscles": "Deltoids & trapezius",
+          "img": "img/upright.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Attach Straight Bar to low pulley cable.",
+            "Stand erect, facing machine, with your feet approximately shoulder width apart and grasp the bar with your hands approximately 6 inches apart and your palms facing down.",
+            "Straighten your arms and allow the weight to pull your arms straight down.",
+            "Keeping your elbows above your hands at all times, slowly pull the bar upward until the back of your hands are even with your chin.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "latraise",
+          "name": "Lateral Deltoid Raise",
+          "muscles": "Deltoids",
+          "img": "img/latraise.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Attach Stirrup Handle (optional) to the low pulley cable.",
+            "Stand with your right side toward the machine.",
+            "Securely grasp the handle with your right hand and your palm facing down.",
+            "Use Shoulder muscle strength to slowly raise the handle upward and outward in a semicircular arc until it is in a position even with your shoulder.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion.",
+            "Change hands, turn around, and repeat with the opposite arm."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "back",
+      "name": "Back",
+      "exercises": [
+        {
+          "id": "latpull",
+          "name": "Lat Pull Down",
+          "muscles": "Latissimus dorsi",
+          "img": "img/latpull.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Adjust Press Arm to the Storage position and attach Lat Bar to the high pulley cable.",
+            "Adjust seat pad so your legs will lock-down comfortably under rollers. Sit on seat pad facing into machine.",
+            "Grasp Lat Bar 3 to 6 inches wider than your shoulders on each side.",
+            "Keeping your elbows back during movement, slowly pull the Lat Bar down until it lightly touches the upper part of your chest. Never pull down toward your head or neck.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "backext",
+          "name": "Back Hyperextension",
+          "muscles": "Lower back",
+          "img": "img/backext.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Set Press Arm to Mid Row position.",
+            "Adjust seat height to the highest position and sit facing into the machine.",
+            "Adjust chest pad to match arm length for a full stretch.",
+            "Sit in a comfortable position that allows you to lean slightly forward while grasping the mid row handles.",
+            "Keep both your arms and back straight during movement. Slowly lean backward, pivoting at the hips, to a 45° angle.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "midrow",
+          "name": "Chest Supported Mid Row",
+          "muscles": "Latissimus dorsi",
+          "img": "img/midrow.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Sit facing machine. Adjust seat height so that when seated the Press Arm Handles pivot to slightly below your chest area.",
+            "Adjust chest pad and Press Arm handles to match arm length for full stretch. Keep chest flat against pad throughout movement.",
+            "Grasp the handles with both hands allowing the weight to gently stretch your Lats.",
+            "Using Upper Back strength pull the handles toward you. Continue to pull the Press Arm Handles until they are even with your midsection.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "row",
+          "name": "Seated Row",
+          "muscles": "Mid back · Lats",
+          "img": "img/row.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Attach the Low Row Bar to the low pulley chain.",
+            "Sit on the floor facing the machine with your feet flat on the foot plate and your knees slightly bent.",
+            "Grasp the bar with both hands, arms extended and back straight.",
+            "Pull the bar to your midsection, keeping your elbows close to your sides and squeezing your shoulder blades together.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ],
+          "src": "own"
+        }
+      ]
+    },
+    {
+      "id": "arms",
+      "name": "Arms",
+      "exercises": [
+        {
+          "id": "curl",
+          "name": "Biceps Curl",
+          "muscles": "Biceps",
+          "img": "img/curl.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Attach Straight Bar to low pulley cable.",
+            "Facing the machine, take an underhand grasp on the bar. Stand erect with your feet set at shoulder width and stand in front of foot brace. Your arms should be down at your sides with the bar resting on your thighs.",
+            "Keeping your upper arms locked against the sides of your torso, use Biceps strength to curl the bar upward and forward in a semicircular arc to a position beneath your chin.",
+            "Pause for a moment, then slowly return the bar back along the same arc, to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "tripush",
+          "name": "Triceps Press Down",
+          "muscles": "Triceps",
+          "img": "img/tripush.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level and adjust Press Arm to Storage position.",
+            "Attach Straight Bar and chain to high pulley cable.",
+            "Facing the machine, stand erect with your feet set at approximately shoulder width. Grip the bar securely with your palms facing forward.",
+            "Pull the bar down and lock your upper arms against the sides of your torso where they must remain throughout the exercise movement. Lean slightly forward at the waist.",
+            "Moving only your forearms, use Tricep strength to push the bar downward in a semicircular arc to a position below your waist.",
+            "Pause for a moment, then slowly return the bar back along the same arc, to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "triext",
+          "name": "Triceps Extension",
+          "muscles": "Triceps",
+          "img": "img/triext.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level and move Pec Dec Arms out of the way.",
+            "Attach Tricep / Ab Strap to mid pulley cable.",
+            "Sit on seat pad, facing away from the machine.",
+            "Bend at the waist so that your torso is at an approximate 45° angle. Keep your hands behind your head and your arms bent with your elbows facing forward.",
+            "Keeping your upper arms motionless, use Tricep strength to move the strap forward until your arms are extended.",
+            "Pause for a moment, then slowly return the strap back along the same arc, to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "abs",
+      "name": "Abs",
+      "exercises": [
+        {
+          "id": "abcrunch",
+          "name": "Resistance Ab Crunch",
+          "muscles": "Abdominals",
+          "img": "img/abcrunch.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level and move Pec Dec Arms out of the way.",
+            "Attach Tricep / Ab Strap to mid pulley cable.",
+            "Sit on seat pad with your back resting against back pad. Grasp the strap and place it securely over your shoulders, keeping your hands planted firmly on your upper chest throughout the exercise movement.",
+            "Using Abdominal muscle strength, slowly bend forward at the waist as far as comfortably possible.",
+            "Pause for a moment, then slowly return back to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "obcrunch",
+          "name": "Oblique Crunch",
+          "muscles": "Obliques & abdominals",
+          "img": "img/obcrunch.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level and adjust Press Arm to Storage position.",
+            "Attach Tricep / Ab Strap to mid pulley cable.",
+            "Sit on seat pad with your back resting against back pad. Grasp the strap and place it securely over your shoulders, keeping your hands planted firmly on your upper chest throughout the exercise movement.",
+            "While holding the strap firmly over your shoulders, simultaneously bend forward and rotate your upper body slowly to the left as far as comfortably possible while keeping your legs and hips stationary.",
+            "Pause for a moment, then slowly return to the starting position.",
+            "Alternate the movements from the left to the right and then repeat the movements.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "obbend",
+          "name": "Oblique Bend",
+          "muscles": "Obliques",
+          "img": "img/obbend.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Attach Stirrup Handle (optional) and chain to low pulley cable.",
+            "Take an overhand grasp of the handle with your right hand and stand 1 to 2 feet away from the machine with your right side toward the machine.",
+            "Keeping your arm, legs, and hips straight, bend your torso away from the machine.",
+            "Pause for a moment, then slowly return your torso back along the same arc, to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion.",
+            "Turn around and repeat with the opposite hand."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hips",
+      "name": "Hips / Thighs",
+      "note": "Leg press is 2:1 — you push double what the stack says (up to 420 lb).",
+      "exercises": [
+        {
+          "id": "legabd",
+          "name": "Leg Abduction",
+          "muscles": "Hip & outer thigh",
+          "img": "img/legabd.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Attach Ankle Strap to your left ankle and low pulley cable. Stand 1 to 2 feet away from the pulley with your right side toward the machine. Grasp back pad for stability.",
+            "Keeping your legs straight and body balanced, allow the weight to pull your left leg across your body and toward the machine.",
+            "Using Outer Thigh strength, slowly pull your left leg across and away from your body as far as comfortably possible.",
+            "Pause for a moment, then slowly return along the same arc, to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion.",
+            "Turn around and repeat with the opposite leg."
+          ]
+        },
+        {
+          "id": "glute",
+          "name": "Glute Kickback",
+          "muscles": "Glutes",
+          "img": "img/glute.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Attach Ankle Strap to your left ankle and low pulley cable. Stand facing the machine in front of the foot brace.",
+            "Keeping your legs straight and body balanced, allow the weight to pull your left leg toward the machine. Hold machine for balance and support.",
+            "Keeping both legs straight and using Gluteal strength, slowly pull your left leg backward and behind your body as far as comfortably possible.",
+            "Pause for a moment, then slowly return along the same arc, to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion.",
+            "Repeat above using the opposite leg."
+          ]
+        },
+        {
+          "id": "legpress",
+          "name": "Leg Press",
+          "muscles": "Quadriceps, hamstrings, & glutes",
+          "img": "img/legpress.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Sit comfortably on seat pad with your back flat against the back pad and your feet securely against the press plate.",
+            "Adjust back pad so your knees are at a 90° angle.",
+            "Grasp the handles at your sides for balance and stability.",
+            "Using leg muscles, slowly press the foot plate until your legs are extended. Do not lock-out your knees.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ],
+          "ratio": 2
+        }
+      ]
+    },
+    {
+      "id": "legs",
+      "name": "Legs",
+      "note": "Calf press is on the leg press station, so it is 2:1 as well.",
+      "exercises": [
+        {
+          "id": "legext",
+          "name": "Leg Extension",
+          "muscles": "Quadriceps",
+          "img": "img/legext.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Adjust Press Arm to Storage position and set back pad to the fully retracted flat position.",
+            "Sit comfortably on seat pad. Place knees over the top roller pads and hook your feet under the bottom leg pads.",
+            "Grasp handles at your sides for balance and stability.",
+            "Using Quadricep strength, extend your feet outward and upward until your legs are fully extended.",
+            "Pause for a moment, then slowly return your feet back along the same arc, to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ]
+        },
+        {
+          "id": "legcurl",
+          "name": "Standing Leg Curl",
+          "muscles": "Hamstrings & leg biceps",
+          "img": "img/legcurl.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Stand facing machine and hook your left heel under the bottom leg pad with left knee positioned slightly below the top roller pad. Adjust the back pad and / or Press Arm and grasp for stability during exercise movement.",
+            "Use Hamstring strength to pull and curl your left foot upward, bending your knee as far as comfortably possible.",
+            "Pause for a moment, then slowly return to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion.",
+            "Change sides and repeat with opposite leg."
+          ]
+        },
+        {
+          "id": "calf",
+          "name": "Calf Press",
+          "muscles": "Gastrocnemius",
+          "img": "img/calf.jpg",
+          "steps": [
+            "Insert pin into weight stack at desired resistance level.",
+            "Adjust back pad to desired position.",
+            "Sit comfortably on seat pad with your back flat against the back pad and the balls of your feet on the bottom portion of the press plate.",
+            "Grasp the handles at your sides for balance and stability.",
+            "Extend your legs and hold them in this position throughout the exercise. Do not lock-out your knees.",
+            "Flex your toes forward as far as you comfortably can, hold that position for a moment and return to the furthest back position you comfortably can.",
+            "Exhale on exertion, inhale on return motion."
+          ],
+          "ratio": 2
+        }
+      ]
+    },
+    {
+      "id": "gkr9",
+      "name": "GKR9 Knee Raise / Dip",
+      "note": "Bodyweight — reps only.",
+      "exercises": [
+        {
+          "id": "kneeraise",
+          "name": "Vertical Knee Raise",
+          "muscles": "Abs · Hip flexors",
+          "img": "img/gkr9.jpg",
+          "steps": [
+            "Step up on the foot pegs, rest your forearms on the arm pads and grasp the handles, with your back against the back pad.",
+            "Step off the pegs so your weight hangs on your forearms.",
+            "Keeping your back against the pad, use abdominal strength to raise your knees toward your chest.",
+            "Pause for a moment, then slowly lower your legs to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ],
+          "src": "own",
+          "bodyweight": true
+        },
+        {
+          "id": "dips",
+          "name": "Dips",
+          "muscles": "Chest · Triceps",
+          "img": "img/gkr9.jpg",
+          "steps": [
+            "Grasp the dip handles and press yourself up to arms’ length with your feet off the pegs.",
+            "Keeping your elbows close to your body, slowly lower yourself until your upper arms are about parallel with the floor.",
+            "Pause for a moment, then press back up to the starting position. Repeat movement.",
+            "Exhale on exertion, inhale on return motion."
+          ],
+          "src": "own",
+          "bodyweight": true
+        }
+      ]
+    }
   ];
+  const SOURCES = {
+    chart: 'Photo and steps: Body‑Solid G9S exercise chart.',
+    own: 'Not on the Body‑Solid chart — standard form cues. Drawing from the EXM‑3700LP / GKR9 owner’s manual.',
+  };
+  const LEGACY_NAMES = { reardelt: 'Rear Delt Fly', shrug: 'Shrug' };   // ids from an earlier version, kept readable in exports
   const EX = {};
-  STATIONS.forEach(s => s.exercises.forEach(e => { EX[e.id] = e; }));
+  GROUPS.forEach(g => g.exercises.forEach(e => { EX[e.id] = e; }));
 
   // ---- Storage ---------------------------------------------------------------
   const KEY = 'exm3700lp.v1';
@@ -213,6 +611,7 @@
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const exName = id => (EX[id] && EX[id].name) || LEGACY_NAMES[id] || id;
 
   function weightLabel(ex, plates) {
     if (ex.bodyweight) return 'bodyweight';
@@ -229,14 +628,14 @@
   const chips = document.getElementById('chips');
 
   function build() {
-    chips.innerHTML = STATIONS.map(s => `<a href="#st-${s.id}">${esc(s.name.split(' / ')[0].replace(' Station', ''))}</a>`).join('');
-    main.innerHTML = STATIONS.map(s => `
-      <section class="station" id="st-${s.id}">
-        <h2>${esc(s.name)}</h2>
-        <p class="note">${esc(s.note)}</p>
-        ${s.exercises.map(cardHTML).join('')}
+    chips.innerHTML = GROUPS.map(g => `<a href="#g-${g.id}">${esc(g.name)}</a>`).join('');
+    main.innerHTML = GROUPS.map(g => `
+      <section class="group" id="g-${g.id}">
+        <h2>${esc(g.name)}</h2>
+        ${g.note ? `<p class="note">${esc(g.note)}</p>` : ''}
+        ${g.exercises.map(cardHTML).join('')}
       </section>`).join('');
-    STATIONS.forEach(s => s.exercises.forEach(e => renderCard(e.id)));
+    GROUPS.forEach(g => g.exercises.forEach(e => renderCard(e.id)));
     renderStats();
   }
 
@@ -254,7 +653,14 @@
       </div>`;
     return `
       <article class="ex" id="ex-${ex.id}" data-ex="${ex.id}">
-        <header><h3>${esc(ex.name)}</h3><span class="muscles">${esc(ex.muscles)}</span></header>
+        <header>
+          <button type="button" class="thumb" data-act="how" aria-label="How to do ${esc(ex.name)}"><img src="${esc(ex.img)}" alt="" loading="lazy"></button>
+          <div>
+            <h3>${esc(ex.name)}</h3>
+            <span class="muscles">${esc(ex.muscles)}</span>
+            <button type="button" class="how" data-act="how">How to ›</button>
+          </div>
+        </header>
         ${platesRow}
         <div class="row">
           <label for="rp-${ex.id}">Reps</label>
@@ -303,6 +709,16 @@
       `${dayName(t)} ${shortDate(t)} · ${todayN} set${todayN === 1 ? '' : 's'} today · ${n} total` + (first && first !== t ? ` since ${shortDate(first)}` : '');
   }
 
+  function showHow(ex) {
+    document.getElementById('howImg').src = ex.img;
+    document.getElementById('howTitle').textContent = ex.name;
+    document.getElementById('howMeta').textContent = ex.muscles + (ex.bodyweight ? ' · bodyweight' : '') + (ex.ratio ? ' · 2:1 ratio' : '');
+    document.getElementById('howSteps').innerHTML = ex.steps.map(s => `<li>${esc(s)}</li>`).join('');
+    document.getElementById('howSrc').textContent = SOURCES[ex.src || 'chart'];
+    const dlg = document.getElementById('how');
+    dlg.scrollTop = 0; dlg.showModal();
+  }
+
   // ---- Interaction -----------------------------------------------------------
   main.addEventListener('click', ev => {
     const btn = ev.target.closest('button[data-act]');
@@ -310,7 +726,9 @@
     const card = btn.closest('.ex'), exId = card.dataset.ex, ex = EX[exId], s = sel(exId);
     const act = btn.dataset.act;
 
-    if (act === 'inc' || act === 'dec') {
+    if (act === 'how') {
+      showHow(ex);
+    } else if (act === 'inc' || act === 'dec') {
       const f = btn.dataset.field, d = act === 'inc' ? 1 : -1;
       s[f] = f === 'plates' ? clamp(s.plates + d, 0, MAX_PLATES) : clamp(s.reps + d, 1, MAX_REPS);
       card.querySelector(`input[data-field=${f}]`).value = s[f];
@@ -352,7 +770,7 @@
       const byEx = {};
       byDate[date].sort((a, b) => a.t < b.t ? -1 : 1).forEach(e => (byEx[e.ex] = byEx[e.ex] || []).push(e));
       Object.keys(byEx).forEach(exId => {
-        const ex = EX[exId] || { name: exId };
+        const ex = EX[exId] || { name: exName(exId) };
         // Group consecutive sets done at the same plates: "8 plates / 80 lb × 12, 10 | 9 plates / 90 lb × 8"
         const groups = [];
         byEx[exId].forEach(e => {
@@ -399,6 +817,8 @@
     save(); build(); toast('Reset');
   });
   document.getElementById('fallbackClose').addEventListener('click', () => document.getElementById('fallback').close());
+  document.getElementById('howClose').addEventListener('click', () => document.getElementById('how').close());
+  document.getElementById('how').addEventListener('click', ev => { if (ev.target === ev.currentTarget) ev.currentTarget.close(); });
 
   let toastTimer;
   function toast(msg) {
