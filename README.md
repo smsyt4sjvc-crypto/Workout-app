@@ -16,7 +16,13 @@ A one‑page, offline‑capable set logger for the **Body‑Solid EXM‑3700LP**
 
 ## Routines
 
-Load a plan and the app shows each day's exercises in order, with targets, setup notes and progress (e.g. "2 of 3 sets ✓"). Tap **Load routine** (or **Edit**) at the top, paste the routine and **Save**. The app opens on today's weekday; tap another day to see it. Each person has their own routine, and **Reset** leaves it in place.
+Pick a routine from the menu at the top of the app. It lists every routine in [`routines/`](routines/) (see [`routines/index.json`](routines/index.json)), and *Paste a routine…* takes your own text. Each person picks their own.
+
+**Cycle (default).** Workouts are listed in order. The one after the last you marked done is **Next** and opens automatically, whatever the date, so a skipped day never skips a workout. Each row shows when it was last done. At the end of a workout tap **Mark … done** (**Undo** if that was a mistake). The copied log gets a `Workout done: …` line, and **Reset** keeps your place in the cycle.
+
+**Static.** A routine with a `Mode: static` line is a reference list: tap a workout to read its exercises, targets and setup notes. Nothing is logged or tracked.
+
+Routines picked from the menu update themselves: when a file in `routines/` changes, the app picks up the new version the next time it opens with signal. Editing a routine in the app turns it into your own pasted copy.
 
 A routine is plain text, one line per exercise:
 
@@ -32,13 +38,14 @@ B2 Plank: 3 × 30–45 sec
 Cardio: Bike sprints, 10 min
 ```
 
-- `## Day · title` starts a day. Lines sharing a letter (A1, A2…) are a superset or circuit.
+- `## Name · title` starts a workout (any name: `Mon`, `Day 1`, `Push`…), in the order they're done. Lines sharing a letter (A1, A2…) are a superset or circuit.
 - `/arm`, `/leg` or `/side` means each side. `sec` makes it a timed hold, logged in seconds.
 - Machine exercises use the app's names and log plates. Names starting `DB ` log pounds (0 = bodyweight), `Band ` logs Light / Medium / Heavy, anything else is bodyweight reps. Add `(DB)` or `(band)` after a name to override.
-- `Warm-up:`, `Cardio:`, `Cool-down:` and `Note:` lines show as notes. Notes before the first day go under *Plan notes*.
+- `Warm-up:`, `Cardio:`, `Cool-down:` and `Note:` lines show as notes. Notes before the first workout go under *Plan notes*.
+- `Mode: static` makes it a read-only reference list.
 - The routine sheet lists any line it couldn't read, and **Copy instructions for Claude** copies a prompt that gets any Claude chat to write a routine in this format.
 
-[`routines/weekly-plan.txt`](routines/weekly-plan.txt) is the weekly G9S plan in this format.
+To add a routine to the menu, put its file in `routines/` and list it in `routines/index.json`. [`routines/weekly-plan.txt`](routines/weekly-plan.txt) is the weekly G9S plan.
 
 ## More than one person
 
@@ -93,4 +100,4 @@ Repo **Settings → Pages → Build and deployment → Source: "Deploy from a br
 - `img/` — one photo per exercise from the Body‑Solid chart, plus two drawings from the manual
 - `manifest.webmanifest`, `sw.js`, `icons/` — home‑screen install and offline cache (photos included)
 - `logs/` — one saved log per person (`logs/<name>.md`)
-- `routines/` — routines ready to paste into the app
+- `routines/` — routines shown in the app's menu, listed in `routines/index.json`

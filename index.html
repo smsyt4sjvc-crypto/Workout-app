@@ -106,15 +106,30 @@
   /* Routine */
   section.routine { margin-top: 18px; scroll-margin-top: 150px; }
   .rhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .rhead h2 { margin: 0; font-size: 17px; min-width: 0; }
   .pill { flex: none; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 600; }
-  .rempty { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted); font-size: 14px; }
-  .days { display: flex; gap: 6px; overflow-x: auto; margin: 10px 0 4px; scrollbar-width: none; }
-  .days::-webkit-scrollbar { display: none; }
-  .days button { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 50px; height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 600; }
-  .days button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-  .days button.is-today::after { content: '\00a0•'; }
-  .daytitle { margin: 8px 0 10px; font-size: 16px; font-weight: 700; }
+  #rpick {
+    -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; min-height: 42px; padding: 8px 32px 8px 12px;
+    border-radius: 10px; border: 1px solid var(--line); color: var(--text);
+    background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2398a2ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center / 12px 8px;
+    font: inherit; font-size: 16px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+  }
+  .wnote { color: var(--muted); font-size: 14px; margin: 10px 0 0; line-height: 1.45; }
+  .wnote b { color: var(--text); }
+  .wlist { margin: 10px 0 0; }
+  .wrow {
+    display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; width: 100%; min-height: 46px;
+    padding: 8px 12px; margin: 0 0 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--card);
+    text-align: left; font-size: 15px; line-height: 1.3; scroll-margin-top: 150px;
+  }
+  .wrow.open { border-color: var(--accent); }
+  .wnum { color: var(--muted); font-size: 13px; font-weight: 700; }
+  .wname { min-width: 0; }
+  .wstat { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .wstat.next { color: var(--accent-text); background: var(--accent); padding: 3px 9px; border-radius: 999px; font-weight: 700; }
+  .wstat.last { color: var(--ok); font-weight: 700; }
+  .wbody { margin: 4px 0 16px; }
+  .finish { background: var(--ok); }
+  .finish.undo { background: var(--card2); color: var(--text); border: 1px solid var(--line); }
   .rnote { background: var(--card2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin: 0 0 10px; font-size: 14px; line-height: 1.45; }
   .rnote b { margin-right: 4px; }
   details.plannotes { margin: 8px 0 0; font-size: 14px; }
@@ -699,9 +714,15 @@
   function load() {
     try {
       const s = JSON.parse(localStorage.getItem(people.current));
-      if (s && Array.isArray(s.entries)) return { entries: s.entries, sel: s.sel || {}, routine: typeof s.routine === 'string' ? s.routine : '' };
+      if (s && Array.isArray(s.entries)) return {
+        entries: s.entries, sel: s.sel || {},
+        routine: typeof s.routine === 'string' ? s.routine : '',            // routine text
+        routineSrc: typeof s.routineSrc === 'string' ? s.routineSrc : '',   // its file in routines/, '' if pasted
+        progress: s.progress && typeof s.progress === 'object' ? s.progress : {},   // place in each routine's cycle
+        workouts: Array.isArray(s.workouts) ? s.workouts : [],              // "Mark done" log, exported with the sets
+      };
     } catch (e) { /* fall through */ }
-    return { entries: [], sel: {}, routine: '' };
+    return { entries: [], sel: {}, routine: '', routineSrc: '', progress: {}, workouts: [] };
   }
   function save() {
     try { localStorage.setItem(people.current, JSON.stringify(state)); }
@@ -776,7 +797,7 @@
 
   let builtOn = '';
   function build() {
-    if (builtOn !== today()) { routineDay = null; builtOn = today(); }   // a new day opens on that day's routine
+    if (builtOn !== today()) { routineDay = null; builtOn = today(); }   // a new day opens on the next workout
     const r = routine();
     chips.innerHTML = '<a href="#g-routine">Routine</a>' + GROUPS.map(g => `<a href="#g-${g.id}">${esc(g.name)}</a>`).join('');
     main.innerHTML = routineHTML(r) + (r ? '<h2 class="all">All exercises</h2>' : '') + GROUPS.map(g => `
@@ -785,7 +806,8 @@
         ${g.note ? `<p class="note">${esc(g.note)}</p>` : ''}
         ${g.exercises.map(e => cardHTML(e)).join('')}
       </section>`).join('');
-    new Set([...main.querySelectorAll('.ex[data-ex]')].map(c => c.dataset.ex)).forEach(renderCard);
+    new Set([...main.querySelectorAll('.ex[data-ex]:not(.ro)')].map(c => c.dataset.ex)).forEach(renderCard);
+    renderPicker();
     renderStats();
     renderWho();
   }
@@ -793,8 +815,8 @@
   // One card per exercise. Inside a routine (opts.item) it also shows the target and setup note; the same
   // exercise can then be on screen twice, so cards are found by data-ex and only the full-list one has an id.
   function cardHTML(ex, opts = {}) {
-    const it = opts.item, key = opts.key || 'ex';
-    if (it) {   // follow the routine's target (bottom of the range) until the person changes the count themselves
+    const it = opts.item, key = opts.key || 'ex', ro = !!opts.readonly;   // read-only: a static routine's reference card
+    if (it && !ro) {   // follow the routine's target (bottom of the range) until the person changes the count themselves
       const cf = countField(ex), s = sel(ex.id);
       if (!s.ownCount) s[cf.key] = clamp(it.lo, cf.min, cf.max);
     }
@@ -819,8 +841,9 @@
         </header>` : `
         <header class="plain"><div><h3>${esc(ex.name)}</h3><span class="muscles">${KIND_NAMES[ex.kind]}${ex.timed ? ' · timed' : ''}</span></div></header>`;
     const plan = it ? `
-        <div class="plan">${it.label ? `<span class="tag">${esc(it.label)}</span>` : ''}<span>${esc(targetText(it))}</span><span class="progress" data-role="progress"></span></div>
+        <div class="plan">${it.label ? `<span class="tag">${esc(it.label)}</span>` : ''}<span>${esc(targetText(it))}</span>${ro ? '' : '<span class="progress" data-role="progress"></span>'}</div>
         ${it.note ? `<p class="setup">${esc(it.note)}</p>` : ''}` : '';
+    if (ro) return `<article class="ex ro" data-ex="${ex.id}">${head}${plan}</article>`;
     return `
       <article class="ex"${it ? '' : ` id="ex-${ex.id}"`} data-ex="${ex.id}"${it ? ` data-sets="${it.sets}"` : ''}>
         ${head}${plan}${rows}
@@ -843,7 +866,7 @@
       const sets = prev.filter(e => e.date === lastDate).map(en => setLabel(exOf(en), en)).join(', ');
       lastHTML = `<b>Last:</b> ${esc(shortDate(lastDate))} · ${esc(sets)}`;
     }
-    document.querySelectorAll(`.ex[data-ex="${exId}"]`).forEach(card => {
+    document.querySelectorAll(`.ex[data-ex="${exId}"]:not(.ro)`).forEach(card => {
       fieldsFor(ex).forEach(f => {   // keep every copy in step, but never overwrite what is being typed
         const inp = card.querySelector(`input[data-field="${f.key}"]`);
         if (inp && inp !== document.activeElement) inp.value = showVal(f, s[f.key]);
@@ -901,7 +924,7 @@
   const FORMAT_HELP = [
     'EXM-3700LP routine · Name of the plan',
     '',
-    '## Mon · Day title',
+    '## Mon · Workout title',
     'Warm-up: shown as a note',
     'A1 Leg Press: 3 × 8–12 | setup note',
     'A2 Calf Press: 3 × 12–15',
@@ -909,18 +932,20 @@
     'B2 Plank: 3 × 30–45 sec',
     'Cardio: shown as a note',
     '',
-    '• One "## Day" line per day (Mon…Sun, or any name).',
+    '• One "## Name · title" line per workout (Mon, Day 1, Push… any name).',
     '• Same letter (A1, A2…) = superset or circuit.',
     '• /arm, /leg or /side = each side. "sec" = a timed hold.',
     '• Machine moves use the app’s names. Start dumbbell moves with "DB " and band moves with "Band "; anything else is bodyweight. Add (DB) or (band) after a name to override.',
     '• Warm-up:, Cardio:, Cool-down: and Note: lines are shown as notes.',
+    '• Workouts run in order as a cycle: the app opens the one after the last you marked done.',
+    '• Add a line "Mode: static" for a plan you only want to read: no logging, no tracking.',
   ].join('\n');
   const CLAUDE_PROMPT = [
     'Write my workout routine as plain text in exactly this format, inside one code block, so I can paste it into my EXM-3700LP workout app:',
     '',
     'EXM-3700LP routine · <plan name>',
     '',
-    '## Mon · <day title>',
+    '## Day 1 · <workout title>',
     'Warm-up: <text>',
     'A1 <Exercise>: <sets> × <reps or range> | <short setup note>',
     'A2 <Exercise>: <sets> × <reps>/arm | <short setup note>',
@@ -928,12 +953,13 @@
     'Cool-down: <text>',
     '',
     'Rules:',
-    '- One "## <day>" line per day (Mon, Tue, …), then one line per exercise.',
+    '- One "## <name> · <title>" line per workout (e.g. "## Day 1 · Upper"), in the order they should be done, then one line per exercise.',
     '- Exercises sharing a letter (A1, A2, …) are done together as a superset or circuit.',
     '- Add /arm, /leg or /side for per-side reps. For timed holds write e.g. "3 × 30–45 sec".',
     `- For machine exercises use exactly these names: ${MACHINE_NAMES.join(', ')}.`,
     '- Start dumbbell exercises with "DB " and band exercises with "Band ". Anything else counts as bodyweight.',
     '- Warm-up:, Cardio:, Cool-down: and Note: lines are free text.',
+    '- If the plan is only for reading, not for logging, add the line "Mode: static" right under the first line.',
   ].join('\n');
 
   const norm = s => s.toLowerCase().replace(/\b(tricep|bicep)s\b/g, '$1').replace(/[^a-z0-9]/g, '');
@@ -942,22 +968,22 @@
   Object.assign(MACHINE, { benchpress: 'bench', pecdeck: 'pecfly', legcurl: 'legcurl', shoulderpress: 'shoulder',
     triceppushdown: 'tripush', abcrunch: 'abcrunch', cablecrunch: 'abcrunch', midrow: 'midrow', kneeraise: 'kneeraise', dip: 'dips' });
   const KIND_TAGS = { machine: 'machine', db: 'db', dumbbell: 'db', band: 'band', bodyweight: 'bw', bw: 'bw' };
-  const DOW = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   const TITLE_RE = /^EXM-?3700LP routine\b\s*(?:[·:—–-]\s*(.*))?$/i;
   const DAY_RE = /^#{1,3}\s*(.+?)(?:\s+[·—–-]\s+(.+))?$/;
   const NOTE_RE = /^(warm[\s-]?up|cool[\s-]?down|cardio|stretch|rest|note)s?\s*:\s*(.+)$/i;
   const EX_RE = /^(?:([A-Za-z]\d{1,2})[.)]?\s+)?(.+?)\s*:\s*(\d{1,2})\s*[×xX*]\s*(\d{1,3})(?:\s*[–—-]\s*(\d{1,3}))?\s*(sec|secs|seconds|s)?\s*(?:\/\s*(arm|leg|side))?\s*(?:\|\s*(.*))?$/;
 
   function parseRoutine(text) {
-    const r = { title: '', notes: [], days: [], problems: [] }, seen = new Set();
+    const r = { title: '', static: false, notes: [], days: [], problems: [] }, seen = new Set();
     let day = null;
     text.split(/\r?\n/).forEach((raw, i) => {
       const line = raw.replace(/\*\*|__|`/g, '').trim().replace(/^(?:[-*•]|\d+[.)])\s+/, '');
       if (!line || /^-{3,}$/.test(line)) return;
       let m;
       if ((m = line.match(TITLE_RE))) { r.title = (m[1] || '').trim(); return; }
+      if ((m = line.match(/^mode\s*:\s*(\w+)\s*$/i))) { r.static = /^(static|list|reference)$/i.test(m[1]); return; }
       if (line.startsWith('#') && (m = line.match(DAY_RE))) {
-        day = { name: m[1].trim(), title: (m[2] || '').trim(), dow: DOW.indexOf(m[1].trim().slice(0, 3).toLowerCase()), items: [] };
+        day = { name: m[1].trim(), title: (m[2] || '').trim(), items: [] };
         r.days.push(day); return;
       }
       if ((m = line.match(NOTE_RE))) {
@@ -965,14 +991,14 @@
         (day ? day.items : r.notes).push({ type: 'note', label, text: m[2].trim() }); return;
       }
       if ((m = line.match(EX_RE))) {
-        if (!day) { r.problems.push(`Line ${i + 1}: exercise before the first "## Day" line`); return; }
+        if (!day) { r.problems.push(`Line ${i + 1}: exercise before the first "## Workout" line`); return; }
         const item = { type: 'ex', label: (m[1] || '').toUpperCase(), sets: +m[3], lo: +m[4], hi: m[5] ? +m[5] : +m[4], timed: !!m[6], side: (m[7] || '').toLowerCase(), note: (m[8] || '').trim() };
         item.id = resolveExercise(m[2], item, r.problems, i + 1, seen).id;
         day.items.push(item); return;
       }
       r.problems.push(`Line ${i + 1} not understood: ${line.length > 60 ? line.slice(0, 57) + '…' : line}`);
     });
-    if (!r.days.length) r.problems.push('No days found. Each day starts with a line like "## Mon · Full Body A".');
+    if (!r.days.length) r.problems.push('No workouts found. Each workout starts with a line like "## Mon · Full Body A".');
     return r;
   }
 
@@ -1004,12 +1030,24 @@
   }
   const noteHTML = n => `<p class="rnote">${n.label ? `<b>${esc(n.label)}:</b>` : ''}${esc(n.text)}</p>`;
 
-  function routineHTML(r) {
-    if (!r) return `<section class="routine" id="g-routine"><div class="rempty"><span>No routine loaded</span><button type="button" class="pill" data-act="routine">Load routine</button></div></section>`;
-    const dow = new Date().getDay();
-    let di = routineDay;
-    if (di == null || di >= r.days.length) { di = r.days.findIndex(d => d.dow === dow); if (di < 0) di = 0; }
-    const d = r.days[di];
+  // Workouts run in order as a cycle, not by weekday: "Next" is the one after the last marked done, so a skipped
+  // day never skips a workout. A static routine ("Mode: static") is a plain reference list with nothing logged.
+  const routineKey = () => state.routineSrc || 'pasted';
+  function progress() {
+    const k = routineKey();
+    return state.progress[k] || (state.progress[k] = { last: null, lastDate: null, dates: {} });
+  }
+  function nextIndex(r) {
+    const i = r.days.findIndex(d => d.name === progress().last);
+    return i < 0 ? 0 : (i + 1) % r.days.length;
+  }
+  function latestFinish() {   // this routine's most recent "Mark done" still in the log (Reset clears the log)
+    const k = routineKey();
+    for (let i = state.workouts.length - 1; i >= 0; i--) if (state.workouts[i].routine === k) return state.workouts[i];
+    return null;
+  }
+
+  function workoutHTML(r, d, di) {
     let body = '';
     for (let i = 0; i < d.items.length;) {
       const it = d.items[i];
@@ -1018,25 +1056,138 @@
       const letter = it.label.charAt(0);
       let j = i + 1;
       while (letter && j < d.items.length && d.items[j].type === 'ex' && d.items[j].label.charAt(0) === letter) j++;
-      const cards = d.items.slice(i, j).map((g, k) => cardHTML(EX[g.id], { item: g, key: `r${di}-${i + k}` })).join('');
+      const cards = d.items.slice(i, j).map((g, k) => cardHTML(EX[g.id], { item: g, key: `r${di}-${i + k}`, readonly: r.static })).join('');
       body += j - i > 1 ? `<div class="sgroup"><p class="glabel">${j - i > 2 ? 'Circuit' : 'Superset'} ${esc(letter)}</p>${cards}</div>` : cards;
       i = j;
     }
+    if (!body) body = '<p class="rnote">Nothing planned.</p>';
+    if (!r.static) {
+      const w = latestFinish(), undo = w && w.day === d.name && w.date === today() && progress().last === d.name;
+      body += undo ? '<button type="button" class="log finish undo" data-act="unfinish">Done today ✓ · Undo</button>'
+                   : `<button type="button" class="log finish" data-act="finish" data-day="${di}">Mark ${esc(d.name)} done</button>`;
+    }
+    return `<div class="wbody">${body}</div>`;
+  }
+
+  function routineHTML(r) {
+    const head = `<div class="rhead"><select id="rpick" aria-label="Routine"></select>${state.routine ? '<button type="button" class="pill" data-act="routine">Edit</button>' : ''}</div>`;
+    if (!r) return `<section class="routine" id="g-routine">${head}<p class="wnote">${state.routine ? 'This routine has no workouts yet. Tap Edit.' : 'Pick a routine above, or choose “Paste a routine…”.'}</p></section>`;
+    const p = progress(), nx = r.static ? -1 : nextIndex(r);
+    const open = routineDay == null ? nx : routineDay;   // -1: all closed
+    const rows = r.days.map((d, i) => {
+      let stat = '';
+      if (i === nx) stat = '<span class="wstat next">Next</span>';
+      else if (!r.static && p.dates[d.name]) stat = p.last === d.name
+        ? `<span class="wstat last">Last · ${esc(shortDate(p.dates[d.name]))}</span>`
+        : `<span class="wstat">✓ ${esc(shortDate(p.dates[d.name]))}</span>`;
+      return `<button type="button" class="wrow${i === open ? ' open' : ''}" data-act="day" data-day="${i}" aria-expanded="${i === open}">` +
+        `<span class="wnum">${i + 1}</span><span class="wname"><b>${esc(d.name)}</b>${d.title ? ' · ' + esc(d.title) : ''}</span>${stat}</button>` +
+        (i === open ? workoutHTML(r, d, i) : '');
+    }).join('');
+    const where = r.static ? 'Reference list. Tap a workout to see it.'
+      : p.last ? `Last done: <b>${esc(p.last)}</b> on ${esc(shortDate(p.lastDate))} · next up: <b>${esc(r.days[nx].name)}</b>`
+      : 'Start with workout 1 and tap “Mark … done” at the end of each.';
     return `
       <section class="routine" id="g-routine">
-        <div class="rhead"><h2>${esc(r.title || 'Routine')}</h2><button type="button" class="pill" data-act="routine">Edit</button></div>
+        ${head}
         ${r.notes.length ? `<details class="plannotes"><summary>Plan notes (${r.notes.length})</summary>${r.notes.map(noteHTML).join('')}</details>` : ''}
-        <div class="days">${r.days.map((x, k) => `<button type="button" data-act="day" data-day="${k}" class="${k === di ? 'on' : ''}${x.dow === dow ? ' is-today' : ''}">${esc(x.name)}</button>`).join('')}</div>
-        <p class="daytitle">${esc(d.name)}${d.title ? ' · ' + esc(d.title) : ''}</p>
-        ${body || '<p class="rnote">Nothing planned.</p>'}
+        <p class="wnote">${where}</p>
+        <div class="wlist">${rows}</div>
       </section>`;
   }
+  const scrollToRow = i => { const el = main.querySelector(`.wrow[data-day="${i}"]`); if (el) el.scrollIntoView({ block: 'start' }); };
+
+  function finishWorkout(i) {
+    const r = routine(), d = r.days[i], p = progress();
+    state.workouts.push({ id: uid(), date: today(), t: new Date().toISOString(), routine: routineKey(), day: d.name, title: d.title,
+      prev: { last: p.last, lastDate: p.lastDate, dayDate: p.dates[d.name] || null } });   // so Undo can put it back
+    p.last = d.name; p.lastDate = today(); p.dates[d.name] = today();
+    routineDay = null; save(); build();
+    const nx = nextIndex(r);
+    scrollToRow(nx);
+    toast(`${d.name} done · next up: ${r.days[nx].name}`);
+  }
+  function undoFinish() {
+    const w = latestFinish(), r = routine();
+    if (!w || !r) return;
+    const p = progress();
+    p.last = w.prev.last; p.lastDate = w.prev.lastDate;
+    if (w.prev.dayDate) p.dates[w.day] = w.prev.dayDate; else delete p.dates[w.day];
+    state.workouts.splice(state.workouts.indexOf(w), 1);
+    routineDay = r.days.findIndex(d => d.name === w.day);
+    save(); build(); toast(`${w.day} no longer marked done`);
+  }
+
+  // Routines published in the repo (routines/index.json) show in the menu. Picking one loads it from the repo,
+  // and it is refreshed whenever the app opens online, so edits made there reach the phone.
+  const CATALOG_KEY = 'exm3700lp.catalog';
+  let catalog = [];
+  try { catalog = JSON.parse(localStorage.getItem(CATALOG_KEY)) || []; } catch (e) { catalog = []; }
+  const currentPick = () => state.routineSrc ? 'file:' + state.routineSrc : state.routine ? 'pasted' : '';
+  function renderPicker() {
+    const el = document.getElementById('rpick');
+    if (!el) return;
+    const r = routine(), files = catalog.map(c => [c.file, c.name]);
+    if (state.routineSrc && !catalog.some(c => c.file === state.routineSrc)) files.push([state.routineSrc, (r && r.title) || state.routineSrc]);
+    el.innerHTML = '<option value="">No routine</option>' +
+      files.map(([f, n]) => `<option value="file:${esc(f)}">${esc(n)}</option>`).join('') +
+      (state.routine && !state.routineSrc ? `<option value="pasted">${esc((r && r.title) || 'Pasted routine')} (pasted)</option>` : '') +
+      '<option disabled>──────────</option><option value="__paste">Paste a routine…</option>';
+    el.value = currentPick();
+  }
+  async function fetchRoutine(file) {
+    const res = await fetch('routines/' + encodeURIComponent(file), { cache: 'no-cache' });
+    if (!res.ok) throw new Error(String(res.status));
+    return (await res.text()).trim();
+  }
+  async function refreshCatalog() {
+    try {
+      const res = await fetch('routines/index.json', { cache: 'no-cache' });
+      const list = (await res.json()).routines;
+      if (!Array.isArray(list)) return;
+      catalog = list.filter(c => c && typeof c.file === 'string' && typeof c.name === 'string');
+      try { localStorage.setItem(CATALOG_KEY, JSON.stringify(catalog)); } catch (e) { /* menu still works this session */ }
+      renderPicker();
+    } catch (e) { /* offline: keep the saved list */ }
+  }
+  async function loadFromRepo(file) {
+    const who = people.current;
+    try {
+      const text = await fetchRoutine(file);
+      if (!parseRoutine(text).days.length) throw new Error('no workouts');
+      if (people.current !== who) return;
+      state.routine = text; state.routineSrc = file; routineDay = null; parsedText = null;
+      save(); build(); toast(`Loaded ${routine().title || file}`);
+    } catch (e) {
+      toast("Couldn't load that routine. Are you online?"); renderPicker();
+    }
+  }
+  async function refreshRoutine() {
+    const file = state.routineSrc, who = people.current;
+    if (!file) return;
+    try {
+      const text = await fetchRoutine(file);
+      if (people.current !== who || state.routineSrc !== file || text === state.routine || !parseRoutine(text).days.length) return;
+      state.routine = text; parsedText = null; save(); build(); toast('Routine updated');
+    } catch (e) { /* offline: keep the saved copy */ }
+  }
+  // Swapping away from a pasted routine loses its text (repo ones can always be picked again), so ask first.
+  const okToReplace = () => !state.routine || !!state.routineSrc || confirm('Replace the pasted routine? You would need to paste it again to get it back.');
+
+  main.addEventListener('change', ev => {
+    if (ev.target.id !== 'rpick') return;
+    const v = ev.target.value;
+    ev.target.value = currentPick();   // snap back; whatever happens next re-renders
+    if (v === '__paste') openRoutine(true);
+    else if (v === '' && state.routine && okToReplace()) { state.routine = ''; state.routineSrc = ''; routineDay = null; save(); build(); toast('No routine'); }
+    else if (v.startsWith('file:') && v.slice(5) !== state.routineSrc && okToReplace()) loadFromRepo(v.slice(5));
+  });
 
   // The routine sheet: paste, see what was understood, save.
   const rsheet = document.getElementById('rsheet'), rText = document.getElementById('rText'), rSave = document.getElementById('rSave');
   document.getElementById('rFormat').textContent = FORMAT_HELP;
-  function openRoutine() {
-    rText.value = state.routine || '';
+  function openRoutine(blank) {
+    rText.value = blank ? '' : state.routine || '';
     document.getElementById('rRemove').hidden = !state.routine;
     previewRoutine();
     rsheet.querySelector('.body').scrollTop = 0;
@@ -1047,20 +1198,21 @@
     const r = text ? parseRoutine(text) : null;
     const n = r ? r.days.reduce((a, d) => a + d.items.filter(x => x.type === 'ex').length, 0) : 0;
     st.textContent = !r ? 'Paste a routine above.'
-      : !r.days.length ? 'No days found yet.'
-      : `${r.title ? r.title + ' · ' : ''}${r.days.length} day${r.days.length === 1 ? '' : 's'} · ${n} exercise${n === 1 ? '' : 's'}` +
+      : !r.days.length ? 'No workouts found yet.'
+      : `${r.title ? r.title + ' · ' : ''}${r.static ? 'static · ' : ''}${r.days.length} workout${r.days.length === 1 ? '' : 's'} · ${n} exercise${n === 1 ? '' : 's'}` +
         (r.problems.length ? ` · ${r.problems.length} line${r.problems.length === 1 ? '' : 's'} skipped:` : ' · all lines understood');
     ul.innerHTML = r ? r.problems.slice(0, 25).map(p => `<li>${esc(p)}</li>`).join('') : '';
     rSave.disabled = !(r && r.days.length);
   }
   rText.addEventListener('input', previewRoutine);
   rSave.addEventListener('click', () => {
-    state.routine = rText.value.trim(); routineDay = null;
+    const text = rText.value.trim();
+    if (text !== state.routine) { state.routine = text; state.routineSrc = ''; routineDay = null; }   // edited text is the person's own copy
     save(); rsheet.close(); toast('Routine saved');
   });
   document.getElementById('rRemove').addEventListener('click', () => {
     if (!confirm('Remove the routine from this person? Logged sets are kept.')) return;
-    state.routine = ''; save(); rsheet.close(); toast('Routine removed');
+    state.routine = ''; state.routineSrc = ''; save(); rsheet.close(); toast('Routine removed');
   });
   document.getElementById('rCopyPrompt').addEventListener('click', () => copyText(CLAUDE_PROMPT, 'instructions for Claude'));
   document.getElementById('rClose').addEventListener('click', () => rsheet.close());
@@ -1074,7 +1226,16 @@
     if (!btn) return;
     const act = btn.dataset.act;
     if (act === 'routine') return openRoutine();
-    if (act === 'day') { routineDay = +btn.dataset.day; build(); return; }
+    if (act === 'finish') return finishWorkout(+btn.dataset.day);
+    if (act === 'unfinish') return undoFinish();
+    if (act === 'day') {   // open a workout, or close it if it is the open one
+      const i = +btn.dataset.day, r = routine();
+      const open = routineDay == null ? (r.static ? -1 : nextIndex(r)) : routineDay;
+      routineDay = i === open ? -1 : i;
+      build();
+      if (routineDay === i) scrollToRow(i);
+      return;
+    }
 
     const card = btn.closest('.ex');
     if (!card) return;
@@ -1123,15 +1284,18 @@
   });
 
   // ---- Export ----------------------------------------------------------------
-  function formatLog(entries) {
-    const byDate = {};
-    entries.forEach(e => (byDate[e.date] = byDate[e.date] || []).push(e));
+  function formatLog(entries, workouts = []) {
+    const byDate = {}, day = d => byDate[d] || (byDate[d] = { sets: [], done: [] });
+    entries.forEach(e => day(e.date).sets.push(e));
+    workouts.forEach(w => day(w.date).done.push(w));
     const dates = Object.keys(byDate).sort();
-    const lines = [`EXM-3700LP workout log${me().name ? ' · ' + me().name : ''}`, `Exported ${nowStamp()} · ${entries.length} set${entries.length === 1 ? '' : 's'}`];
+    const lines = [`EXM-3700LP workout log${me().name ? ' · ' + me().name : ''}`,
+      `Exported ${nowStamp()} · ${entries.length} set${entries.length === 1 ? '' : 's'}` + (workouts.length ? ` · ${workouts.length} workout${workouts.length === 1 ? '' : 's'} done` : '')];
     dates.forEach(date => {
       lines.push('', `${date} ${dayName(date)}`);
+      byDate[date].done.forEach(w => lines.push(`Workout done: ${w.day}${w.title ? ' · ' + w.title : ''}`));
       const byEx = {};
-      byDate[date].sort((a, b) => a.t < b.t ? -1 : 1).forEach(e => (byEx[e.ex] = byEx[e.ex] || []).push(e));
+      byDate[date].sets.sort((a, b) => a.t < b.t ? -1 : 1).forEach(e => (byEx[e.ex] = byEx[e.ex] || []).push(e));
       Object.keys(byEx).forEach(exId => {
         const ex = exOf(byEx[exId][0]);
         // Group consecutive sets done at the same weight: "8 plates / 80 lb × 12, 10 | 9 plates / 90 lb × 8"
@@ -1171,20 +1335,20 @@
   }
 
   document.getElementById('copyAll').addEventListener('click', () => {
-    if (!state.entries.length) return toast('Nothing logged yet');
+    if (!state.entries.length && !state.workouts.length) return toast('Nothing logged yet');
     askNameOnce();
-    copyText(formatLog(state.entries), `${state.entries.length} set${state.entries.length === 1 ? '' : 's'}`);
+    copyText(formatLog(state.entries, state.workouts), `${state.entries.length} set${state.entries.length === 1 ? '' : 's'}`);
   });
   document.getElementById('copyToday').addEventListener('click', () => {
-    const t = state.entries.filter(e => e.date === today());
-    if (!t.length) return toast('Nothing logged today');
+    const t = state.entries.filter(e => e.date === today()), w = state.workouts.filter(x => x.date === today());
+    if (!t.length && !w.length) return toast('Nothing logged today');
     askNameOnce();
-    copyText(formatLog(t), `today (${t.length} set${t.length === 1 ? '' : 's'})`);
+    copyText(formatLog(t, w), `today (${t.length} set${t.length === 1 ? '' : 's'})`);
   });
   document.getElementById('reset').addEventListener('click', () => {
     const n = state.entries.length, who = me().name ? ` for ${me().name}` : '';
-    if (!confirm(`Delete all ${n} logged set${n === 1 ? '' : 's'}${who} and the plate/rep selections?${state.routine ? ' The routine stays.' : ''}\n\nCopy the log first if you still need it.`)) return;
-    state = { entries: [], sel: {}, routine: state.routine };
+    if (!confirm(`Delete all ${n} logged set${n === 1 ? '' : 's'}${who} and the plate/rep selections?${state.routine ? ' Your routine and your place in it stay.' : ''}\n\nCopy the log first if you still need it.`)) return;
+    state = { entries: [], sel: {}, routine: state.routine, routineSrc: state.routineSrc, progress: state.progress, workouts: [] };
     save(); build(); toast('Reset');
   });
 
@@ -1261,9 +1425,11 @@
   }
 
   // Re-render when the app is reopened on a new day so "Today" rolls over.
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) build(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { build(); refreshCatalog(); refreshRoutine(); } });
 
   build();
+  refreshCatalog();
+  refreshRoutine();
 
   if ('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
