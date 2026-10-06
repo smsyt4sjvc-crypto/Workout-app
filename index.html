@@ -101,6 +101,33 @@
          border-radius: 8px; padding: 2px 4px 2px 8px; margin: 2px 4px 2px 0; color: var(--text); }
   .set button { border: 0; background: transparent; color: var(--muted); font-size: 16px; width: 28px; height: 26px; line-height: 1; border-radius: 6px; }
   .set button:active { color: var(--danger); }
+  .ex header.plain { grid-template-columns: 1fr; }
+
+  /* Routine */
+  section.routine { margin-top: 18px; scroll-margin-top: 150px; }
+  .rhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .rhead h2 { margin: 0; font-size: 17px; min-width: 0; }
+  .pill { flex: none; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 600; }
+  .rempty { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted); font-size: 14px; }
+  .days { display: flex; gap: 6px; overflow-x: auto; margin: 10px 0 4px; scrollbar-width: none; }
+  .days::-webkit-scrollbar { display: none; }
+  .days button { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 50px; height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 600; }
+  .days button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .days button.is-today::after { content: '\00a0•'; }
+  .daytitle { margin: 8px 0 10px; font-size: 16px; font-weight: 700; }
+  .rnote { background: var(--card2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin: 0 0 10px; font-size: 14px; line-height: 1.45; }
+  .rnote b { margin-right: 4px; }
+  details.plannotes { margin: 8px 0 0; font-size: 14px; }
+  details.plannotes summary { color: var(--muted); cursor: pointer; margin-bottom: 8px; }
+  .sgroup { border-left: 3px solid var(--accent); padding-left: 10px; margin: 0 0 6px; }
+  .glabel { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .4px; }
+  .plan { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 14px; margin: -2px 0 6px; }
+  .tag { display: inline-block; min-width: 28px; text-align: center; padding: 1px 6px; border-radius: 6px; background: var(--accent); color: var(--accent-text); font-size: 12px; font-weight: 700; }
+  .progress { color: var(--muted); }
+  .ex.done { border-color: var(--ok); }
+  .ex.done .progress { color: var(--ok); font-weight: 600; }
+  .setup { color: var(--muted); font-size: 13px; margin: 0 0 6px; line-height: 1.4; }
+  h2.all { margin: 26px 0 0; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
 
   /* Toast & dialogs */
   .toast {
@@ -113,18 +140,25 @@
   dialog::backdrop { background: rgba(0,0,0,.6); }
   dialog textarea { width: 100%; height: 40vh; font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; background: var(--card2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
   dialog .actions { margin-top: 10px; }
-  /* How-to sheet: a fixed title bar with ×, only the body scrolls, and the page behind is locked while it is open. */
-  #how[open] { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+  /* Sheets (how-to, routine): a fixed title bar with ×, only the body scrolls, and the page behind is locked while open. */
+  .sheet[open] { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
   @media (max-width: 640px) {
-    #how[open] { width: 100vw; max-width: 100vw; height: 100vh; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; }
+    .sheet[open] { width: 100vw; max-width: 100vw; height: 100vh; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; }
   }
-  #how .bar { flex: none; display: flex; align-items: center; gap: 10px; padding: calc(8px + env(safe-area-inset-top)) 10px 8px 16px; border-bottom: 1px solid var(--line); }
-  #how .bar > div { flex: 1; min-width: 0; }
-  #how h3 { margin: 0; font-size: 18px; }
-  #how .meta { color: var(--muted); font-size: 13px; margin: 2px 0 0; }
-  #how .close { flex: none; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: var(--card2); font-size: 24px; line-height: 1; padding: 0 0 2px; }
-  #how .close:active { background: var(--line); }
-  #how .body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 12px 16px calc(24px + env(safe-area-inset-bottom)); }
+  .sheet .bar { flex: none; display: flex; align-items: center; gap: 10px; padding: calc(8px + env(safe-area-inset-top)) 10px 8px 16px; border-bottom: 1px solid var(--line); }
+  .sheet .bar > div { flex: 1; min-width: 0; }
+  .sheet h3 { margin: 0; font-size: 18px; }
+  .sheet .meta { color: var(--muted); font-size: 13px; margin: 2px 0 0; }
+  .sheet .close { flex: none; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: var(--card2); font-size: 24px; line-height: 1; padding: 0 0 2px; }
+  .sheet .close:active { background: var(--line); }
+  .sheet .body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 12px 16px calc(24px + env(safe-area-inset-bottom)); }
+  button:disabled { opacity: .45; }
+  #rText { height: 42vh; font-size: 16px; }   /* 16px stops iOS zooming in on focus */
+  #rsheet .status { font-size: 14px; margin: 8px 0 0; }
+  #rsheet ul { margin: 6px 0 0; padding-left: 20px; font-size: 13px; color: var(--danger); }
+  #rsheet details { margin-top: 16px; font-size: 14px; }
+  #rsheet summary { font-weight: 600; cursor: pointer; }
+  #rsheet pre { white-space: pre-wrap; font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace; background: var(--card2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
   #how img { display: block; width: 100%; max-height: 44vh; object-fit: contain; border-radius: 10px; background: var(--card2); margin-bottom: 12px; }
   #how ol { margin: 0; padding-left: 22px; font-size: 15px; line-height: 1.45; }
   #how li { margin: 6px 0; }
@@ -152,7 +186,7 @@
   Body‑Solid EXM‑3700LP · two 210 lb stacks in 10 lb plates · leg press 2:1<br>
   Photos and steps from the Body‑Solid G9S exercise chart (same stations). Tap a picture for the how‑to.<br>
   Logs are saved on this device until you tap Reset. Copy them somewhere safe now and then.<br>
-  Each person's log is separate — switch with the name at the top.
+  Each person's log and routine are separate — switch with the name at the top.
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -161,7 +195,30 @@
   <textarea id="fallbackText" readonly></textarea>
   <div class="actions"><button id="fallbackClose">Close</button></div>
 </dialog>
-<dialog id="how" aria-labelledby="howTitle">
+<dialog id="rsheet" class="sheet" aria-labelledby="rTitle">
+  <div class="bar">
+    <div>
+      <h3 id="rTitle">Routine</h3>
+      <p class="meta">Paste a routine below, then Save</p>
+    </div>
+    <button type="button" class="close" id="rClose" aria-label="Close">×</button>
+  </div>
+  <div class="body">
+    <textarea id="rText" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="EXM-3700LP routine · My plan&#10;&#10;## Mon · Push&#10;A1 Chest Press: 3 × 8–12 | Back pad flat&#10;A2 DB Lateral Raise: 3 × 12–15/arm"></textarea>
+    <p class="status" id="rStatus"></p>
+    <ul id="rProblems"></ul>
+    <div class="actions">
+      <button type="button" class="primary" id="rSave">Save routine</button>
+      <button type="button" class="danger" id="rRemove">Remove routine</button>
+    </div>
+    <details>
+      <summary>How to write a routine</summary>
+      <pre id="rFormat"></pre>
+      <div class="actions"><button type="button" id="rCopyPrompt">Copy instructions for Claude</button></div>
+    </details>
+  </div>
+</dialog>
+<dialog id="how" class="sheet" aria-labelledby="howTitle">
   <div class="bar">
     <div>
       <h3 id="howTitle"></h3>
@@ -607,8 +664,13 @@
     own: 'Not on the Body‑Solid chart — standard form cues. Drawing from the EXM‑3700LP / GKR9 owner’s manual.',
   };
   const LEGACY_NAMES = { reardelt: 'Rear Delt Fly', shrug: 'Shrug' };   // ids from an earlier version, kept readable in exports
+  // Every exercise has a kind that decides what you log: machine (plates), db (lb), band (light/medium/heavy)
+  // or bw (bodyweight). Routines add their own dumbbell, band and bodyweight exercises to EX at runtime (custom: true).
   const EX = {};
-  GROUPS.forEach(g => g.exercises.forEach(e => { EX[e.id] = e; }));
+  GROUPS.forEach(g => g.exercises.forEach(e => { e.kind = e.bodyweight ? 'bw' : 'machine'; EX[e.id] = e; }));
+  const KIND_NAMES = { machine: 'Machine', db: 'Dumbbell', band: 'Band', bw: 'Bodyweight' };
+  const BANDS = ['Light', 'Medium', 'Heavy'];
+  const DB_STEP = 2.5, MAX_DB_LB = 100, MAX_SECS = 600;
 
   // ---- Storage ---------------------------------------------------------------
   // Each person's sets and selections live under their own key. The first person keeps the
@@ -637,17 +699,32 @@
   function load() {
     try {
       const s = JSON.parse(localStorage.getItem(people.current));
-      if (s && Array.isArray(s.entries)) return { entries: s.entries, sel: s.sel || {} };
+      if (s && Array.isArray(s.entries)) return { entries: s.entries, sel: s.sel || {}, routine: typeof s.routine === 'string' ? s.routine : '' };
     } catch (e) { /* fall through */ }
-    return { entries: [], sel: {} };
+    return { entries: [], sel: {}, routine: '' };
   }
   function save() {
     try { localStorage.setItem(people.current, JSON.stringify(state)); }
     catch (e) { toast('Could not save — is storage blocked?'); }
   }
   function sel(exId) {
-    if (!state.sel[exId]) state.sel[exId] = { plates: EX[exId].bodyweight ? 0 : 5, reps: 10 };
-    return state.sel[exId];
+    const s = state.sel[exId] || (state.sel[exId] = {});
+    fieldsFor(EX[exId]).forEach(f => { if (typeof s[f.key] !== 'number') s[f.key] = f.def; });
+    return s;
+  }
+
+  // The steppers a card shows: a load (plates / lb / band) unless bodyweight, then reps or seconds.
+  function fieldsFor(ex) {
+    const f = [];
+    if (ex.kind === 'machine') f.push({ key: 'plates', label: 'Plates', min: 0, max: MAX_PLATES, step: 1, def: 5 });
+    if (ex.kind === 'db') f.push({ key: 'load', label: 'Weight', min: 0, max: MAX_DB_LB, step: DB_STEP, def: 10 });
+    if (ex.kind === 'band') f.push({ key: 'load', label: 'Band', min: 1, max: BANDS.length, step: 1, def: 1, names: BANDS });
+    f.push(countField(ex));
+    return f;
+  }
+  function countField(ex) {
+    return ex.timed ? { key: 'secs', label: 'Secs', min: 5, max: MAX_SECS, step: 5, def: 30, count: true }
+                    : { key: 'reps', label: 'Reps', min: 1, max: MAX_REPS, step: 1, def: 10, count: true };
   }
 
   // ---- Helpers ---------------------------------------------------------------
@@ -661,13 +738,35 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const exName = id => (EX[id] && EX[id].name) || LEGACY_NAMES[id] || id;
 
+  const fmt = n => Number.isInteger(n) ? String(n) : n.toFixed(1);
+  const showVal = (f, v) => f.names ? (f.names[v - 1] || '?') : fmt(v);
+
   function weightLabel(ex, plates) {
     if (ex.bodyweight) return 'bodyweight';
     const lb = plates * PLATE_LB;
     return ex.ratio ? `${lb} lb stack · ${lb * ex.ratio} lb press` : `${lb} lb`;
   }
-  function setLabel(ex, en) { // "8 × 12" or "12 reps" for bodyweight
-    return ex.bodyweight ? `${en.reps} reps` : `${en.plates} × ${en.reps}`;
+  function loadLabel(ex, s) {   // text beside the load stepper
+    if (ex.kind === 'machine') return weightLabel(ex, s.plates);
+    if (ex.kind === 'db') return s.load ? 'lb' : 'bodyweight';
+    return ex.kind === 'band' ? 'band' : '';
+  }
+  function unitLabel(ex) {      // text beside the reps / seconds stepper
+    return [ex.timed ? 'seconds' : '', ex.side ? `each ${ex.side}` : '', ex.kind === 'bw' && !ex.timed ? 'bodyweight' : ''].filter(Boolean).join(' · ');
+  }
+  function setLabel(ex, en) {   // "8 × 12", "20 lb × 10", "Light × 15", "12 reps", "45 s"
+    const n = ex.timed ? `${en.secs} s` : en.reps;
+    if (ex.kind === 'machine') return `${en.plates} × ${n}`;
+    if (ex.kind === 'db' && en.load) return `${fmt(en.load)} lb × ${n}`;
+    if (ex.kind === 'band') return `${BANDS[en.load - 1] || '?'} × ${n}`;
+    return ex.timed ? n : `${n} reps`;
+  }
+  // The exercise an entry belongs to. Routine exercises are described by the entry itself, so a log
+  // still reads right after its routine is changed or removed.
+  function exOf(en) {
+    if (EX[en.ex] && !EX[en.ex].custom) return EX[en.ex];
+    if (en.kind) return { id: en.ex, name: en.name, kind: en.kind, timed: !!en.timed, side: en.side || '' };
+    return { id: en.ex, name: exName(en.ex), kind: 'machine' };
   }
   function entriesFor(exId, date) { return state.entries.filter(e => e.ex === exId && (!date || e.date === date)); }
 
@@ -675,33 +774,41 @@
   const main = document.getElementById('main');
   const chips = document.getElementById('chips');
 
+  let builtOn = '';
   function build() {
-    chips.innerHTML = GROUPS.map(g => `<a href="#g-${g.id}">${esc(g.name)}</a>`).join('');
-    main.innerHTML = GROUPS.map(g => `
+    if (builtOn !== today()) { routineDay = null; builtOn = today(); }   // a new day opens on that day's routine
+    const r = routine();
+    chips.innerHTML = '<a href="#g-routine">Routine</a>' + GROUPS.map(g => `<a href="#g-${g.id}">${esc(g.name)}</a>`).join('');
+    main.innerHTML = routineHTML(r) + (r ? '<h2 class="all">All exercises</h2>' : '') + GROUPS.map(g => `
       <section class="group" id="g-${g.id}">
         <h2>${esc(g.name)}</h2>
         ${g.note ? `<p class="note">${esc(g.note)}</p>` : ''}
-        ${g.exercises.map(cardHTML).join('')}
+        ${g.exercises.map(e => cardHTML(e)).join('')}
       </section>`).join('');
-    GROUPS.forEach(g => g.exercises.forEach(e => renderCard(e.id)));
+    new Set([...main.querySelectorAll('.ex[data-ex]')].map(c => c.dataset.ex)).forEach(renderCard);
     renderStats();
     renderWho();
   }
 
-  function cardHTML(ex) {
-    const s = sel(ex.id);
-    const platesRow = ex.bodyweight ? '' : `
-      <div class="row">
-        <label for="pl-${ex.id}">Plates</label>
-        <div class="stepper">
-          <button type="button" data-act="dec" data-field="plates" aria-label="Fewer plates">−</button>
-          <input id="pl-${ex.id}" data-field="plates" type="number" inputmode="numeric" min="0" max="${MAX_PLATES}" value="${s.plates}">
-          <button type="button" data-act="inc" data-field="plates" aria-label="More plates">+</button>
-        </div>
-        <span class="lb" data-role="lb"></span>
-      </div>`;
-    return `
-      <article class="ex" id="ex-${ex.id}" data-ex="${ex.id}">
+  // One card per exercise. Inside a routine (opts.item) it also shows the target and setup note; the same
+  // exercise can then be on screen twice, so cards are found by data-ex and only the full-list one has an id.
+  function cardHTML(ex, opts = {}) {
+    const it = opts.item, key = opts.key || 'ex';
+    if (it) {   // follow the routine's target (bottom of the range) until the person changes the count themselves
+      const cf = countField(ex), s = sel(ex.id);
+      if (!s.ownCount) s[cf.key] = clamp(it.lo, cf.min, cf.max);
+    }
+    const rows = fieldsFor(ex).map(f => `
+        <div class="row">
+          <label for="${key}-${f.key}-${ex.id}">${f.label}</label>
+          <div class="stepper">
+            <button type="button" data-act="dec" data-field="${f.key}" aria-label="Less ${f.label.toLowerCase()}">−</button>
+            <input id="${key}-${f.key}-${ex.id}" data-field="${f.key}" ${f.names ? 'type="text" readonly' : `type="number" inputmode="${f.step % 1 ? 'decimal' : 'numeric'}" min="${f.min}" max="${f.max}" step="${f.step}"`}>
+            <button type="button" data-act="inc" data-field="${f.key}" aria-label="More ${f.label.toLowerCase()}">+</button>
+          </div>
+          <span class="lb" data-role="${f.count ? 'unit' : 'lb'}"></span>
+        </div>`).join('');
+    const head = ex.img ? `
         <header>
           <button type="button" class="thumb" data-act="how" aria-label="How to do ${esc(ex.name)}"><img src="${esc(ex.img)}" alt="" loading="lazy"></button>
           <div>
@@ -709,17 +816,14 @@
             <span class="muscles">${esc(ex.muscles)}</span>
             <button type="button" class="how" data-act="how">How to ›</button>
           </div>
-        </header>
-        ${platesRow}
-        <div class="row">
-          <label for="rp-${ex.id}">Reps</label>
-          <div class="stepper">
-            <button type="button" data-act="dec" data-field="reps" aria-label="Fewer reps">−</button>
-            <input id="rp-${ex.id}" data-field="reps" type="number" inputmode="numeric" min="1" max="${MAX_REPS}" value="${s.reps}">
-            <button type="button" data-act="inc" data-field="reps" aria-label="More reps">+</button>
-          </div>
-          <span class="lb">${ex.bodyweight ? 'bodyweight' : ''}</span>
-        </div>
+        </header>` : `
+        <header class="plain"><div><h3>${esc(ex.name)}</h3><span class="muscles">${KIND_NAMES[ex.kind]}${ex.timed ? ' · timed' : ''}</span></div></header>`;
+    const plan = it ? `
+        <div class="plan">${it.label ? `<span class="tag">${esc(it.label)}</span>` : ''}<span>${esc(targetText(it))}</span><span class="progress" data-role="progress"></span></div>
+        ${it.note ? `<p class="setup">${esc(it.note)}</p>` : ''}` : '';
+    return `
+      <article class="ex"${it ? '' : ` id="ex-${ex.id}"`} data-ex="${ex.id}"${it ? ` data-sets="${it.sets}"` : ''}>
+        ${head}${plan}${rows}
         <button type="button" class="log" data-act="log">Log set</button>
         <div class="today" data-role="today"></div>
         <div class="last" data-role="last"></div>
@@ -727,27 +831,35 @@
   }
 
   function renderCard(exId) {
-    const ex = EX[exId], s = sel(exId);
-    const card = document.getElementById('ex-' + exId);
-    const lb = card.querySelector('[data-role=lb]');
-    if (lb) lb.textContent = weightLabel(ex, s.plates);
-
-    const t = today();
+    const ex = EX[exId], s = sel(exId), t = today();
     const todays = entriesFor(exId, t);
-    const todayEl = card.querySelector('[data-role=today]');
-    todayEl.innerHTML = todays.length
-      ? '<b>Today:</b> ' + todays.map(en => `<span class="set">${esc(setLabel(ex, en))}<button type="button" data-act="del" data-id="${en.id}" aria-label="Delete set">×</button></span>`).join('')
+    const todayHTML = todays.length
+      ? '<b>Today:</b> ' + todays.map(en => `<span class="set">${esc(setLabel(exOf(en), en))}<button type="button" data-act="del" data-id="${en.id}" aria-label="Delete set">×</button></span>`).join('')
       : '<b>Today:</b> nothing logged yet';
-
     const prev = state.entries.filter(e => e.ex === exId && e.date < t);
-    const lastEl = card.querySelector('[data-role=last]');
+    let lastHTML = '';
     if (prev.length) {
       const lastDate = prev.reduce((m, e) => e.date > m ? e.date : m, prev[0].date);
-      const sets = prev.filter(e => e.date === lastDate).map(en => setLabel(ex, en)).join(', ');
-      lastEl.innerHTML = `<b>Last:</b> ${esc(shortDate(lastDate))} · ${esc(sets)}`;
-    } else {
-      lastEl.innerHTML = '';
+      const sets = prev.filter(e => e.date === lastDate).map(en => setLabel(exOf(en), en)).join(', ');
+      lastHTML = `<b>Last:</b> ${esc(shortDate(lastDate))} · ${esc(sets)}`;
     }
+    document.querySelectorAll(`.ex[data-ex="${exId}"]`).forEach(card => {
+      fieldsFor(ex).forEach(f => {   // keep every copy in step, but never overwrite what is being typed
+        const inp = card.querySelector(`input[data-field="${f.key}"]`);
+        if (inp && inp !== document.activeElement) inp.value = showVal(f, s[f.key]);
+      });
+      const lb = card.querySelector('[data-role=lb]');
+      if (lb) lb.textContent = loadLabel(ex, s);
+      const unit = card.querySelector('[data-role=unit]');
+      if (unit) unit.textContent = unitLabel(ex);
+      card.querySelector('[data-role=today]').innerHTML = todayHTML;
+      card.querySelector('[data-role=last]').innerHTML = lastHTML;
+      const need = +card.dataset.sets;
+      if (need) {
+        card.querySelector('[data-role=progress]').textContent = `· ${todays.length} of ${need} sets${todays.length >= need ? ' ✓' : ''}`;
+        card.classList.toggle('done', todays.length >= need);
+      }
+    });
   }
 
   function renderStats() {
@@ -783,25 +895,208 @@
     window.scrollTo(0, lockedY);
   }
 
+  // ---- Routine ---------------------------------------------------------------
+  // A routine is plain text (FORMAT_HELP below), saved per person in state.routine and parsed when shown.
+  const MACHINE_NAMES = GROUPS.flatMap(g => g.exercises.map(e => e.name));
+  const FORMAT_HELP = [
+    'EXM-3700LP routine · Name of the plan',
+    '',
+    '## Mon · Day title',
+    'Warm-up: shown as a note',
+    'A1 Leg Press: 3 × 8–12 | setup note',
+    'A2 Calf Press: 3 × 12–15',
+    'B1 DB Single-Arm Row: 3 × 10–12/arm',
+    'B2 Plank: 3 × 30–45 sec',
+    'Cardio: shown as a note',
+    '',
+    '• One "## Day" line per day (Mon…Sun, or any name).',
+    '• Same letter (A1, A2…) = superset or circuit.',
+    '• /arm, /leg or /side = each side. "sec" = a timed hold.',
+    '• Machine moves use the app’s names. Start dumbbell moves with "DB " and band moves with "Band "; anything else is bodyweight. Add (DB) or (band) after a name to override.',
+    '• Warm-up:, Cardio:, Cool-down: and Note: lines are shown as notes.',
+  ].join('\n');
+  const CLAUDE_PROMPT = [
+    'Write my workout routine as plain text in exactly this format, inside one code block, so I can paste it into my EXM-3700LP workout app:',
+    '',
+    'EXM-3700LP routine · <plan name>',
+    '',
+    '## Mon · <day title>',
+    'Warm-up: <text>',
+    'A1 <Exercise>: <sets> × <reps or range> | <short setup note>',
+    'A2 <Exercise>: <sets> × <reps>/arm | <short setup note>',
+    'Cardio: <text>',
+    'Cool-down: <text>',
+    '',
+    'Rules:',
+    '- One "## <day>" line per day (Mon, Tue, …), then one line per exercise.',
+    '- Exercises sharing a letter (A1, A2, …) are done together as a superset or circuit.',
+    '- Add /arm, /leg or /side for per-side reps. For timed holds write e.g. "3 × 30–45 sec".',
+    `- For machine exercises use exactly these names: ${MACHINE_NAMES.join(', ')}.`,
+    '- Start dumbbell exercises with "DB " and band exercises with "Band ". Anything else counts as bodyweight.',
+    '- Warm-up:, Cardio:, Cool-down: and Note: lines are free text.',
+  ].join('\n');
+
+  const norm = s => s.toLowerCase().replace(/\b(tricep|bicep)s\b/g, '$1').replace(/[^a-z0-9]/g, '');
+  const MACHINE = {};   // normalised name -> id of the app's own exercise
+  Object.values(EX).forEach(e => { MACHINE[norm(e.name)] = e.id; });
+  Object.assign(MACHINE, { benchpress: 'bench', pecdeck: 'pecfly', legcurl: 'legcurl', shoulderpress: 'shoulder',
+    triceppushdown: 'tripush', abcrunch: 'abcrunch', cablecrunch: 'abcrunch', midrow: 'midrow', kneeraise: 'kneeraise', dip: 'dips' });
+  const KIND_TAGS = { machine: 'machine', db: 'db', dumbbell: 'db', band: 'band', bodyweight: 'bw', bw: 'bw' };
+  const DOW = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const TITLE_RE = /^EXM-?3700LP routine\b\s*(?:[·:—–-]\s*(.*))?$/i;
+  const DAY_RE = /^#{1,3}\s*(.+?)(?:\s+[·—–-]\s+(.+))?$/;
+  const NOTE_RE = /^(warm[\s-]?up|cool[\s-]?down|cardio|stretch|rest|note)s?\s*:\s*(.+)$/i;
+  const EX_RE = /^(?:([A-Za-z]\d{1,2})[.)]?\s+)?(.+?)\s*:\s*(\d{1,2})\s*[×xX*]\s*(\d{1,3})(?:\s*[–—-]\s*(\d{1,3}))?\s*(sec|secs|seconds|s)?\s*(?:\/\s*(arm|leg|side))?\s*(?:\|\s*(.*))?$/;
+
+  function parseRoutine(text) {
+    const r = { title: '', notes: [], days: [], problems: [] }, seen = new Set();
+    let day = null;
+    text.split(/\r?\n/).forEach((raw, i) => {
+      const line = raw.replace(/\*\*|__|`/g, '').trim().replace(/^(?:[-*•]|\d+[.)])\s+/, '');
+      if (!line || /^-{3,}$/.test(line)) return;
+      let m;
+      if ((m = line.match(TITLE_RE))) { r.title = (m[1] || '').trim(); return; }
+      if (line.startsWith('#') && (m = line.match(DAY_RE))) {
+        day = { name: m[1].trim(), title: (m[2] || '').trim(), dow: DOW.indexOf(m[1].trim().slice(0, 3).toLowerCase()), items: [] };
+        r.days.push(day); return;
+      }
+      if ((m = line.match(NOTE_RE))) {
+        const label = /^note/i.test(m[1]) ? '' : m[1][0].toUpperCase() + m[1].slice(1).toLowerCase().replace(/\s/, '-');
+        (day ? day.items : r.notes).push({ type: 'note', label, text: m[2].trim() }); return;
+      }
+      if ((m = line.match(EX_RE))) {
+        if (!day) { r.problems.push(`Line ${i + 1}: exercise before the first "## Day" line`); return; }
+        const item = { type: 'ex', label: (m[1] || '').toUpperCase(), sets: +m[3], lo: +m[4], hi: m[5] ? +m[5] : +m[4], timed: !!m[6], side: (m[7] || '').toLowerCase(), note: (m[8] || '').trim() };
+        item.id = resolveExercise(m[2], item, r.problems, i + 1, seen).id;
+        day.items.push(item); return;
+      }
+      r.problems.push(`Line ${i + 1} not understood: ${line.length > 60 ? line.slice(0, 57) + '…' : line}`);
+    });
+    if (!r.days.length) r.problems.push('No days found. Each day starts with a line like "## Mon · Full Body A".');
+    return r;
+  }
+
+  // Machine names map to the app's own exercises; anything else becomes a routine exercise in EX.
+  function resolveExercise(raw, item, problems, lineNo, seen) {
+    let name = raw.trim(), kind = '';
+    const tag = name.match(/\s*\((machine|db|dumbbell|band|bodyweight|bw)\)$/i);
+    if (tag) { name = name.slice(0, tag.index).trim(); kind = KIND_TAGS[tag[1].toLowerCase()]; }
+    if (!kind) kind = /^(db|dumbbell)\s/i.test(name) ? 'db' : /^band\s/i.test(name) ? 'band' : '';
+    if (!kind || kind === 'machine') {
+      const id = MACHINE[norm(name)];
+      if (id) return EX[id];
+      if (kind === 'machine') problems.push(`Line ${lineNo}: "${name}" isn't one of the app's machine exercises, so it's logged as bodyweight`);
+      kind = 'bw';
+    }
+    const id = 'x-' + norm(name).slice(0, 48);
+    if (!seen.has(id)) { seen.add(id); EX[id] = { id, name, kind, custom: true, timed: item.timed, side: item.side }; }
+    return EX[id];
+  }
+
+  let routineDay = null, parsedText = null, parsed = null;
+  function routine() {
+    if (!state.routine) return null;
+    if (parsedText !== state.routine) { parsed = parseRoutine(state.routine); parsedText = state.routine; }
+    return parsed.days.length ? parsed : null;
+  }
+  function targetText(it) {
+    return `${it.sets} × ${it.lo}${it.hi !== it.lo ? '–' + it.hi : ''}${it.timed ? ' sec' : ''}${it.side ? '/' + it.side : ''}`;
+  }
+  const noteHTML = n => `<p class="rnote">${n.label ? `<b>${esc(n.label)}:</b>` : ''}${esc(n.text)}</p>`;
+
+  function routineHTML(r) {
+    if (!r) return `<section class="routine" id="g-routine"><div class="rempty"><span>No routine loaded</span><button type="button" class="pill" data-act="routine">Load routine</button></div></section>`;
+    const dow = new Date().getDay();
+    let di = routineDay;
+    if (di == null || di >= r.days.length) { di = r.days.findIndex(d => d.dow === dow); if (di < 0) di = 0; }
+    const d = r.days[di];
+    let body = '';
+    for (let i = 0; i < d.items.length;) {
+      const it = d.items[i];
+      if (it.type === 'note') { body += noteHTML(it); i++; continue; }
+      // Consecutive exercises sharing a letter (A1, A2…) are done together.
+      const letter = it.label.charAt(0);
+      let j = i + 1;
+      while (letter && j < d.items.length && d.items[j].type === 'ex' && d.items[j].label.charAt(0) === letter) j++;
+      const cards = d.items.slice(i, j).map((g, k) => cardHTML(EX[g.id], { item: g, key: `r${di}-${i + k}` })).join('');
+      body += j - i > 1 ? `<div class="sgroup"><p class="glabel">${j - i > 2 ? 'Circuit' : 'Superset'} ${esc(letter)}</p>${cards}</div>` : cards;
+      i = j;
+    }
+    return `
+      <section class="routine" id="g-routine">
+        <div class="rhead"><h2>${esc(r.title || 'Routine')}</h2><button type="button" class="pill" data-act="routine">Edit</button></div>
+        ${r.notes.length ? `<details class="plannotes"><summary>Plan notes (${r.notes.length})</summary>${r.notes.map(noteHTML).join('')}</details>` : ''}
+        <div class="days">${r.days.map((x, k) => `<button type="button" data-act="day" data-day="${k}" class="${k === di ? 'on' : ''}${x.dow === dow ? ' is-today' : ''}">${esc(x.name)}</button>`).join('')}</div>
+        <p class="daytitle">${esc(d.name)}${d.title ? ' · ' + esc(d.title) : ''}</p>
+        ${body || '<p class="rnote">Nothing planned.</p>'}
+      </section>`;
+  }
+
+  // The routine sheet: paste, see what was understood, save.
+  const rsheet = document.getElementById('rsheet'), rText = document.getElementById('rText'), rSave = document.getElementById('rSave');
+  document.getElementById('rFormat').textContent = FORMAT_HELP;
+  function openRoutine() {
+    rText.value = state.routine || '';
+    document.getElementById('rRemove').hidden = !state.routine;
+    previewRoutine();
+    rsheet.querySelector('.body').scrollTop = 0;
+    lockPage(); rsheet.showModal();
+  }
+  function previewRoutine() {
+    const text = rText.value.trim(), st = document.getElementById('rStatus'), ul = document.getElementById('rProblems');
+    const r = text ? parseRoutine(text) : null;
+    const n = r ? r.days.reduce((a, d) => a + d.items.filter(x => x.type === 'ex').length, 0) : 0;
+    st.textContent = !r ? 'Paste a routine above.'
+      : !r.days.length ? 'No days found yet.'
+      : `${r.title ? r.title + ' · ' : ''}${r.days.length} day${r.days.length === 1 ? '' : 's'} · ${n} exercise${n === 1 ? '' : 's'}` +
+        (r.problems.length ? ` · ${r.problems.length} line${r.problems.length === 1 ? '' : 's'} skipped:` : ' · all lines understood');
+    ul.innerHTML = r ? r.problems.slice(0, 25).map(p => `<li>${esc(p)}</li>`).join('') : '';
+    rSave.disabled = !(r && r.days.length);
+  }
+  rText.addEventListener('input', previewRoutine);
+  rSave.addEventListener('click', () => {
+    state.routine = rText.value.trim(); routineDay = null;
+    save(); rsheet.close(); toast('Routine saved');
+  });
+  document.getElementById('rRemove').addEventListener('click', () => {
+    if (!confirm('Remove the routine from this person? Logged sets are kept.')) return;
+    state.routine = ''; save(); rsheet.close(); toast('Routine removed');
+  });
+  document.getElementById('rCopyPrompt').addEventListener('click', () => copyText(CLAUDE_PROMPT, 'instructions for Claude'));
+  document.getElementById('rClose').addEventListener('click', () => rsheet.close());
+  rsheet.addEventListener('click', ev => { if (ev.target === ev.currentTarget) rsheet.close(); });
+  // Previews register exercises from unsaved text, so re-read the saved routine whenever the sheet closes.
+  rsheet.addEventListener('close', () => { unlockPage(); parsedText = null; build(); });
+
   // ---- Interaction -----------------------------------------------------------
   main.addEventListener('click', ev => {
     const btn = ev.target.closest('button[data-act]');
     if (!btn) return;
-    const card = btn.closest('.ex'), exId = card.dataset.ex, ex = EX[exId], s = sel(exId);
     const act = btn.dataset.act;
+    if (act === 'routine') return openRoutine();
+    if (act === 'day') { routineDay = +btn.dataset.day; build(); return; }
 
+    const card = btn.closest('.ex');
+    if (!card) return;
+    const exId = card.dataset.ex, ex = EX[exId], s = sel(exId);
     if (act === 'how') {
       showHow(ex);
     } else if (act === 'inc' || act === 'dec') {
-      const f = btn.dataset.field, d = act === 'inc' ? 1 : -1;
-      s[f] = f === 'plates' ? clamp(s.plates + d, 0, MAX_PLATES) : clamp(s.reps + d, 1, MAX_REPS);
-      card.querySelector(`input[data-field=${f}]`).value = s[f];
+      const f = fieldsFor(ex).find(x => x.key === btn.dataset.field);
+      s[f.key] = clamp(s[f.key] + (act === 'inc' ? f.step : -f.step), f.min, f.max);
+      if (f.count) s.ownCount = true;
       save(); renderCard(exId);
     } else if (act === 'log') {
-      if (!ex.bodyweight && s.plates === 0 && !confirm('Log this set with 0 plates?')) return;
-      state.entries.push({ id: uid(), ex: exId, date: today(), t: new Date().toISOString(), plates: ex.bodyweight ? null : s.plates, reps: s.reps });
+      if (ex.kind === 'machine' && s.plates === 0 && !confirm('Log this set with 0 plates?')) return;
+      const en = { id: uid(), ex: exId, date: today(), t: new Date().toISOString() };
+      if (ex.kind === 'machine') en.plates = s.plates;
+      else if (!ex.custom) en.plates = null;   // GKR9 bodyweight, stored as before
+      else Object.assign(en, { name: ex.name, kind: ex.kind }, ex.timed && { timed: true }, ex.side && { side: ex.side },
+                         (ex.kind === 'db' || ex.kind === 'band') && { load: s.load });
+      if (ex.timed) en.secs = s.secs; else en.reps = s.reps;
+      state.entries.push(en);
       save(); renderCard(exId); renderStats();
-      toast(`Logged ${ex.name} · ${ex.bodyweight ? s.reps + ' reps' : s.plates + ' plates × ' + s.reps}`);
+      toast(`Logged ${ex.name} · ${setLabel(ex, en)}`);
     } else if (act === 'del') {
       state.entries = state.entries.filter(e => e.id !== btn.dataset.id);
       save(); renderCard(exId); renderStats();
@@ -811,16 +1106,20 @@
   main.addEventListener('input', ev => {
     const inp = ev.target;
     if (!inp.matches('input[data-field]')) return;
-    const exId = inp.closest('.ex').dataset.ex, s = sel(exId), f = inp.dataset.field;
-    const v = parseInt(inp.value, 10);
-    if (Number.isNaN(v)) return;
-    s[f] = f === 'plates' ? clamp(v, 0, MAX_PLATES) : clamp(v, 1, MAX_REPS);
+    const exId = inp.closest('.ex').dataset.ex, s = sel(exId);
+    const f = fieldsFor(EX[exId]).find(x => x.key === inp.dataset.field);
+    let v = parseFloat(inp.value);
+    if (!f || f.names || Number.isNaN(v)) return;
+    v = f.step % 1 ? Math.round(v * 2) / 2 : Math.round(v);
+    s[f.key] = clamp(v, f.min, f.max);
+    if (f.count) s.ownCount = true;
     save(); renderCard(exId);
   });
   main.addEventListener('focusout', ev => {   // tidy up anything odd that was typed
     const inp = ev.target;
     if (!inp.matches || !inp.matches('input[data-field]')) return;
-    inp.value = sel(inp.closest('.ex').dataset.ex)[inp.dataset.field];
+    const exId = inp.closest('.ex').dataset.ex, f = fieldsFor(EX[exId]).find(x => x.key === inp.dataset.field);
+    if (f) inp.value = showVal(f, sel(exId)[f.key]);
   });
 
   // ---- Export ----------------------------------------------------------------
@@ -834,21 +1133,26 @@
       const byEx = {};
       byDate[date].sort((a, b) => a.t < b.t ? -1 : 1).forEach(e => (byEx[e.ex] = byEx[e.ex] || []).push(e));
       Object.keys(byEx).forEach(exId => {
-        const ex = EX[exId] || { name: exName(exId) };
-        // Group consecutive sets done at the same plates: "8 plates / 80 lb × 12, 10 | 9 plates / 90 lb × 8"
+        const ex = exOf(byEx[exId][0]);
+        // Group consecutive sets done at the same weight: "8 plates / 80 lb × 12, 10 | 9 plates / 90 lb × 8"
         const groups = [];
         byEx[exId].forEach(e => {
+          const v = ex.kind === 'machine' ? e.plates : (ex.kind === 'db' || ex.kind === 'band') ? e.load : null;
+          const n = ex.timed ? `${e.secs} s` : e.reps;
           const g = groups[groups.length - 1];
-          if (g && g.plates === e.plates) g.reps.push(e.reps); else groups.push({ plates: e.plates, reps: [e.reps] });
+          if (g && g.v === v) g.n.push(n); else groups.push({ v, n: [n] });
         });
-        const parts = groups.map(g => {
-          const w = ex.bodyweight || g.plates == null ? 'bodyweight' : `${g.plates} plate${g.plates === 1 ? '' : 's'} / ${weightLabel(ex, g.plates)}`;
-          return `${w} × ${g.reps.join(', ')}`;
-        });
-        lines.push(`- ${ex.name}: ${parts.join(' | ')}`);
+        const parts = groups.map(g => { const w = weightText(ex, g.v); return w ? `${w} × ${g.n.join(', ')}` : g.n.join(', '); });
+        lines.push(`- ${ex.name}${ex.side ? ` (each ${ex.side})` : ''}: ${parts.join(' | ')}`);
       });
     });
     return lines.join('\n') + '\n';
+  }
+  function weightText(ex, v) {   // the "weight" half of an export line; '' for timed bodyweight holds
+    if (ex.kind === 'machine') return v == null ? 'bodyweight' : `${v} plate${v === 1 ? '' : 's'} / ${weightLabel(ex, v)}`;
+    if (ex.kind === 'db') return v ? `${fmt(v)} lb` : 'bodyweight';
+    if (ex.kind === 'band') return `${(BANDS[v - 1] || '?').toLowerCase()} band`;
+    return ex.timed ? '' : 'bodyweight';
   }
 
   async function copyText(text, what) {
@@ -879,8 +1183,8 @@
   });
   document.getElementById('reset').addEventListener('click', () => {
     const n = state.entries.length, who = me().name ? ` for ${me().name}` : '';
-    if (!confirm(`Delete all ${n} logged set${n === 1 ? '' : 's'}${who} and the plate/rep selections?\n\nCopy the log first if you still need it.`)) return;
-    state = { entries: [], sel: {} };
+    if (!confirm(`Delete all ${n} logged set${n === 1 ? '' : 's'}${who} and the plate/rep selections?${state.routine ? ' The routine stays.' : ''}\n\nCopy the log first if you still need it.`)) return;
+    state = { entries: [], sel: {}, routine: state.routine };
     save(); build(); toast('Reset');
   });
 
@@ -918,7 +1222,7 @@
   }
   function switchTo(key) {
     people.current = key; savePeople();
-    state = load(); build();
+    state = load(); routineDay = null; build();
     toast(me().name ? `Logging for ${me().name}` : 'Logging for a new person');
   }
 

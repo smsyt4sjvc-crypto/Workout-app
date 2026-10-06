@@ -14,6 +14,32 @@ A one‑page, offline‑capable set logger for the **Body‑Solid EXM‑3700LP**
 5. Afterwards: **Copy all** (or **Copy today**) and paste it into the chat with Claude to be saved to your file in [`logs/`](logs/), or into your notes.
 6. **Reset** wipes the logged sets and plate/rep selections of whoever is selected. It asks first.
 
+## Routines
+
+Load a plan and the app shows each day's exercises in order, with targets, setup notes and progress (e.g. "2 of 3 sets ✓"). Tap **Load routine** (or **Edit**) at the top, paste the routine and **Save**. The app opens on today's weekday; tap another day to see it. Each person has their own routine, and **Reset** leaves it in place.
+
+A routine is plain text, one line per exercise:
+
+```
+EXM-3700LP routine · Weekly plan
+
+## Mon · Full Body A
+Warm-up: bike easy 5 min
+A1 Leg Press: 3 × 8–12 | Back pad set so knees are at 90°
+A2 Calf Press: 3 × 12–15
+B1 DB Single-Arm Row: 3 × 10–12/arm | Free hand braced on the seat pad
+B2 Plank: 3 × 30–45 sec
+Cardio: Bike sprints, 10 min
+```
+
+- `## Day · title` starts a day. Lines sharing a letter (A1, A2…) are a superset or circuit.
+- `/arm`, `/leg` or `/side` means each side. `sec` makes it a timed hold, logged in seconds.
+- Machine exercises use the app's names and log plates. Names starting `DB ` log pounds (0 = bodyweight), `Band ` logs Light / Medium / Heavy, anything else is bodyweight reps. Add `(DB)` or `(band)` after a name to override.
+- `Warm-up:`, `Cardio:`, `Cool-down:` and `Note:` lines show as notes. Notes before the first day go under *Plan notes*.
+- The routine sheet lists any line it couldn't read, and **Copy instructions for Claude** copies a prompt that gets any Claude chat to write a routine in this format.
+
+[`routines/weekly-plan.txt`](routines/weekly-plan.txt) is the weekly G9S plan in this format.
+
 ## More than one person
 
 Everyone uses the same app and link; each person's sets are kept apart.
@@ -51,7 +77,7 @@ Exported 2026-10-06 18:02 · 5 sets
 - Dips: bodyweight × 12
 ```
 
-The first line names whose log it is. Sets are listed in the order you logged them; consecutive sets at the same weight share one `×` list.
+The first line names whose log it is. Sets are listed in the order you logged them; consecutive sets at the same weight share one `×` list. Routine exercises read like `- DB Single-Arm Row (each arm): 12.5 lb × 10, 10, 10`, `- Band Face Pull: medium band × 15` and `- Plank: 45 s, 40 s`.
 
 ## Where the data lives
 
@@ -67,3 +93,4 @@ Repo **Settings → Pages → Build and deployment → Source: "Deploy from a br
 - `img/` — one photo per exercise from the Body‑Solid chart, plus two drawings from the manual
 - `manifest.webmanifest`, `sw.js`, `icons/` — home‑screen install and offline cache (photos included)
 - `logs/` — one saved log per person (`logs/<name>.md`)
+- `routines/` — routines ready to paste into the app
