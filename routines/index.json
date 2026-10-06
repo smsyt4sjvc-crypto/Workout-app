@@ -1,5 +1,6 @@
 {
   "routines": [
-    { "file": "weekly-plan.txt", "name": "Weekly plan (G9S, Oct 2026)" }
+    { "file": "weekly-plan.txt", "name": "Weekly plan (G9S, Oct 2026)" },
+    { "file": "glutes-legs-plan.txt", "name": "Glutes & legs plan" }
   ]
 }
