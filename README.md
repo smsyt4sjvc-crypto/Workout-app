@@ -20,7 +20,7 @@ Everyone uses the same app and link; each person's sets are kept apart.
 
 - **On their own phone** (simplest): they add the app to their home screen and set their name. Phones never share data.
 - **Sharing one phone:** use the name picker → *Add a person…*, then switch between names. Each name has its own sets, plate/rep settings and Reset. *Remove …* deletes that person's log from the phone.
-- **In the repo:** one file per person in `logs/`, named after the name at the top of the copied log (`· Jenn` → `logs/jenn.md`). All on `main`. No branches, because GitHub Pages serves a single branch and the app is the same for everyone.
+- **In the repo:** one file per person in `logs/`, named after the name at the top of the copied log (`· Sam` → `logs/sam.md`). All on `main`. No branches, because GitHub Pages serves a single branch and the app is the same for everyone.
 
 ## Exercises
 
@@ -42,7 +42,7 @@ Each stack is 210 lb in 10 lb plates (max 21). The leg press runs a 2:1 ratio, s
 ## Copied log format
 
 ```
-EXM-3700LP workout log · Jenn
+EXM-3700LP workout log · Sam
 Exported 2026-10-06 18:02 · 5 sets
 
 2026-10-06 Tue
