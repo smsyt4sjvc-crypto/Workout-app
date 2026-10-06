@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EXM-3700LP Log</title>
+<meta name="description" content="Set logger for the Body-Solid EXM-3700LP home gym (with GKR9 knee raise / dip station).">
+<meta name="theme-color" content="#111418">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Workout">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+  :root {
+    --bg: #0f1216; --card: #181c22; --card2: #222830; --line: #2b323c;
+    --text: #e8ebef; --muted: #98a2ad; --accent: #4f8cff; --accent-text: #ffffff;
+    --danger: #e5484d; --ok: #2fbf71; --radius: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f2f4f7; --card: #ffffff; --card2: #eef1f5; --line: #d9dee5;
+            --text: #15181c; --muted: #5d6874; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    -webkit-tap-highlight-color: transparent;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+
+  /* Header */
+  .top {
+    position: sticky; top: 0; z-index: 10; background: var(--bg);
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px; border-bottom: 1px solid var(--line);
+  }
+  .top h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: .2px; }
+  .top .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .actions { display: flex; gap: 8px; margin-top: 10px; }
+  .actions button {
+    flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card); font-weight: 600; font-size: 15px;
+  }
+  .actions .primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .actions .danger { color: var(--danger); }
+  nav.chips { display: flex; gap: 8px; overflow-x: auto; padding: 10px 16px 2px; scrollbar-width: none; }
+  nav.chips::-webkit-scrollbar { display: none; }
+  nav.chips a {
+    flex: none; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--card); color: var(--text); text-decoration: none; font-size: 13px; white-space: nowrap;
+  }
+
+  /* Stations & cards */
+  main { padding: 0 16px; }
+  section.station { margin-top: 22px; scroll-margin-top: 150px; }
+  section.station h2 { margin: 0 0 2px; font-size: 17px; }
+  section.station .note { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  .ex {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px; margin-bottom: 12px;
+  }
+  .ex header { margin-bottom: 10px; }
+  .ex h3 { margin: 0; font-size: 17px; }
+  .ex .muscles { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .row { display: grid; grid-template-columns: 58px auto 1fr; align-items: center; gap: 10px; margin: 8px 0; }
+  .row label { color: var(--muted); font-size: 14px; }
+  .stepper { display: inline-flex; align-items: stretch; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--card2); }
+  .stepper button { width: 46px; min-height: 44px; border: 0; background: transparent; font-size: 22px; line-height: 1; }
+  .stepper button:active { background: var(--line); }
+  .stepper input {
+    width: 60px; min-height: 44px; border: 0; border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+    background: transparent; color: var(--text); text-align: center; font: inherit; font-size: 20px; font-weight: 600;
+    -moz-appearance: textfield;
+  }
+  .stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .lb { color: var(--muted); font-size: 13px; line-height: 1.25; }
+  .log {
+    width: 100%; min-height: 48px; margin-top: 8px; border-radius: 10px; border: 0;
+    background: var(--accent); color: var(--accent-text); font-weight: 700; font-size: 16px;
+  }
+  .log:active { filter: brightness(.9); }
+  .today, .last { font-size: 13px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+  .today b, .last b { color: var(--text); font-weight: 600; }
+  .set { display: inline-flex; align-items: center; gap: 2px; background: var(--card2); border: 1px solid var(--line);
+         border-radius: 8px; padding: 2px 4px 2px 8px; margin: 2px 4px 2px 0; color: var(--text); }
+  .set button { border: 0; background: transparent; color: var(--muted); font-size: 16px; width: 28px; height: 26px; line-height: 1; border-radius: 6px; }
+  .set button:active { color: var(--danger); }
+
+  /* Toast & fallback dialog */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 600;
+    opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 20; max-width: calc(100vw - 32px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  dialog { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--text); width: min(92vw, 520px); padding: 16px; }
+  dialog::backdrop { background: rgba(0,0,0,.5); }
+  dialog textarea { width: 100%; height: 40vh; font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; background: var(--card2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  dialog .actions { margin-top: 10px; }
+  footer { color: var(--muted); font-size: 12px; text-align: center; padding: 28px 16px 0; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>EXM‑3700LP</h1>
+  <div class="sub" id="stats">Loading…</div>
+  <div class="actions">
+    <button class="primary" id="copyAll">Copy all</button>
+    <button id="copyToday">Copy today</button>
+    <button class="danger" id="reset">Reset</button>
+  </div>
+</div>
+<nav class="chips" id="chips"></nav>
+<main id="main"></main>
+<footer>
+  Body‑Solid EXM‑3700LP · two 210 lb stacks in 10 lb plates · leg press 2:1<br>
+  Logs are saved on this device until you tap Reset. Copy them somewhere safe now and then.
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<dialog id="fallback">
+  <p style="margin:0 0 8px">Couldn't reach the clipboard. Select all and copy:</p>
+  <textarea id="fallbackText" readonly></textarea>
+  <div class="actions"><button id="fallbackClose">Close</button></div>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---- Machine facts (Body-Solid EXM-3700LP) ---------------------------------
+  const PLATE_LB = 10;     // each plate on the stack
+  const MAX_PLATES = 21;   // 210 lb stack
+  const MAX_REPS = 99;
+
+  const STATIONS = [
+    { id: 'press', name: 'Multi‑Press Station', note: 'Adjustable press arm.',
+      exercises: [
+        { id: 'bench',    name: 'Bench Press',             muscles: 'Chest · Triceps' },
+        { id: 'incline',  name: 'Incline Press',           muscles: 'Upper chest · Shoulders' },
+        { id: 'shoulder', name: 'Shoulder Press',          muscles: 'Shoulders · Triceps' },
+        { id: 'midrow',   name: 'Chest‑Supported Mid Row', muscles: 'Upper back · Rear delts' },
+      ] },
+    { id: 'pec', name: 'Pec Fly / Rear Delt Station', note: 'Swing‑arm pads, adjustable start position.',
+      exercises: [
+        { id: 'pecfly',   name: 'Pec Fly',       muscles: 'Chest' },
+        { id: 'reardelt', name: 'Rear Delt Fly', muscles: 'Rear delts · Upper back' },
+      ] },
+    { id: 'high', name: 'Lat Pulldown / High Pulley', note: 'Lat bar or ab strap on the top pulley.',
+      exercises: [
+        { id: 'latpull',  name: 'Lat Pulldown',     muscles: 'Lats · Biceps' },
+        { id: 'tripush',  name: 'Triceps Pushdown', muscles: 'Triceps' },
+        { id: 'abcrunch', name: 'Cable Ab Crunch',  muscles: 'Abs' },
+      ] },
+    { id: 'low', name: 'Seated Row / Low Pulley', note: 'Low row bar on the chain at floor level.',
+      exercises: [
+        { id: 'row',     name: 'Seated Row',  muscles: 'Mid back · Lats' },
+        { id: 'curl',    name: 'Biceps Curl', muscles: 'Biceps' },
+        { id: 'upright', name: 'Upright Row', muscles: 'Shoulders · Traps' },
+        { id: 'shrug',   name: 'Shrug',       muscles: 'Traps' },
+      ] },
+    { id: 'legdev', name: 'Leg Extension / Leg Curl', note: 'Foam‑roller leg developer on the seat.',
+      exercises: [
+        { id: 'legext',  name: 'Leg Extension', muscles: 'Quads' },
+        { id: 'legcurl', name: 'Leg Curl',      muscles: 'Hamstrings' },
+      ] },
+    { id: 'legpress', name: 'Leg Press / Calf Press', note: '2:1 ratio — you push double what the stack says (up to 420 lb).',
+      exercises: [
+        { id: 'legpress', name: 'Leg Press',  muscles: 'Quads · Glutes', ratio: 2 },
+        { id: 'calf',     name: 'Calf Press', muscles: 'Calves',         ratio: 2 },
+      ] },
+    { id: 'gkr9', name: 'GKR9 Knee Raise / Dip Station', note: 'Bodyweight — reps only.',
+      exercises: [
+        { id: 'kneeraise', name: 'Vertical Knee Raise', muscles: 'Abs · Hip flexors', bodyweight: true },
+        { id: 'dips',      name: 'Dips',                muscles: 'Chest · Triceps',   bodyweight: true },
+      ] },
+  ];
+  const EX = {};
+  STATIONS.forEach(s => s.exercises.forEach(e => { EX[e.id] = e; }));
+
+  // ---- Storage ---------------------------------------------------------------
+  const KEY = 'exm3700lp.v1';
+  let state = load();
+
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if (s && Array.isArray(s.entries)) return { entries: s.entries, sel: s.sel || {} };
+    } catch (e) { /* fall through */ }
+    return { entries: [], sel: {} };
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch (e) { toast('Could not save — is storage blocked?'); }
+  }
+  function sel(exId) {
+    if (!state.sel[exId]) state.sel[exId] = { plates: EX[exId].bodyweight ? 0 : 5, reps: 10 };
+    return state.sel[exId];
+  }
+
+  // ---- Helpers ---------------------------------------------------------------
+  const pad = n => String(n).padStart(2, '0');
+  function today() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function nowStamp() { const d = new Date(); return today() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function dayName(iso) { const [y, m, d] = iso.split('-').map(Number); return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(y, m - 1, d).getDay()]; }
+  function shortDate(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function weightLabel(ex, plates) {
+    if (ex.bodyweight) return 'bodyweight';
+    const lb = plates * PLATE_LB;
+    return ex.ratio ? `${lb} lb stack · ${lb * ex.ratio} lb press` : `${lb} lb`;
+  }
+  function setLabel(ex, en) { // "8 × 12" or "12 reps" for bodyweight
+    return ex.bodyweight ? `${en.reps} reps` : `${en.plates} × ${en.reps}`;
+  }
+  function entriesFor(exId, date) { return state.entries.filter(e => e.ex === exId && (!date || e.date === date)); }
+
+  // ---- Rendering -------------------------------------------------------------
+  const main = document.getElementById('main');
+  const chips = document.getElementById('chips');
+
+  function build() {
+    chips.innerHTML = STATIONS.map(s => `<a href="#st-${s.id}">${esc(s.name.split(' / ')[0].replace(' Station', ''))}</a>`).join('');
+    main.innerHTML = STATIONS.map(s => `
+      <section class="station" id="st-${s.id}">
+        <h2>${esc(s.name)}</h2>
+        <p class="note">${esc(s.note)}</p>
+        ${s.exercises.map(cardHTML).join('')}
+      </section>`).join('');
+    STATIONS.forEach(s => s.exercises.forEach(e => renderCard(e.id)));
+    renderStats();
+  }
+
+  function cardHTML(ex) {
+    const s = sel(ex.id);
+    const platesRow = ex.bodyweight ? '' : `
+      <div class="row">
+        <label for="pl-${ex.id}">Plates</label>
+        <div class="stepper">
+          <button type="button" data-act="dec" data-field="plates" aria-label="Fewer plates">−</button>
+          <input id="pl-${ex.id}" data-field="plates" type="number" inputmode="numeric" min="0" max="${MAX_PLATES}" value="${s.plates}">
+          <button type="button" data-act="inc" data-field="plates" aria-label="More plates">+</button>
+        </div>
+        <span class="lb" data-role="lb"></span>
+      </div>`;
+    return `
+      <article class="ex" id="ex-${ex.id}" data-ex="${ex.id}">
+        <header><h3>${esc(ex.name)}</h3><span class="muscles">${esc(ex.muscles)}</span></header>
+        ${platesRow}
+        <div class="row">
+          <label for="rp-${ex.id}">Reps</label>
+          <div class="stepper">
+            <button type="button" data-act="dec" data-field="reps" aria-label="Fewer reps">−</button>
+            <input id="rp-${ex.id}" data-field="reps" type="number" inputmode="numeric" min="1" max="${MAX_REPS}" value="${s.reps}">
+            <button type="button" data-act="inc" data-field="reps" aria-label="More reps">+</button>
+          </div>
+          <span class="lb">${ex.bodyweight ? 'bodyweight' : ''}</span>
+        </div>
+        <button type="button" class="log" data-act="log">Log set</button>
+        <div class="today" data-role="today"></div>
+        <div class="last" data-role="last"></div>
+      </article>`;
+  }
+
+  function renderCard(exId) {
+    const ex = EX[exId], s = sel(exId);
+    const card = document.getElementById('ex-' + exId);
+    const lb = card.querySelector('[data-role=lb]');
+    if (lb) lb.textContent = weightLabel(ex, s.plates);
+
+    const t = today();
+    const todays = entriesFor(exId, t);
+    const todayEl = card.querySelector('[data-role=today]');
+    todayEl.innerHTML = todays.length
+      ? '<b>Today:</b> ' + todays.map(en => `<span class="set">${esc(setLabel(ex, en))}<button type="button" data-act="del" data-id="${en.id}" aria-label="Delete set">×</button></span>`).join('')
+      : '<b>Today:</b> nothing logged yet';
+
+    const prev = state.entries.filter(e => e.ex === exId && e.date < t);
+    const lastEl = card.querySelector('[data-role=last]');
+    if (prev.length) {
+      const lastDate = prev.reduce((m, e) => e.date > m ? e.date : m, prev[0].date);
+      const sets = prev.filter(e => e.date === lastDate).map(en => setLabel(ex, en)).join(', ');
+      lastEl.innerHTML = `<b>Last:</b> ${esc(shortDate(lastDate))} · ${esc(sets)}`;
+    } else {
+      lastEl.innerHTML = '';
+    }
+  }
+
+  function renderStats() {
+    const t = today(), n = state.entries.length;
+    const todayN = state.entries.filter(e => e.date === t).length;
+    const first = n ? state.entries.reduce((m, e) => e.date < m ? e.date : m, state.entries[0].date) : null;
+    document.getElementById('stats').textContent =
+      `${dayName(t)} ${shortDate(t)} · ${todayN} set${todayN === 1 ? '' : 's'} today · ${n} total` + (first && first !== t ? ` since ${shortDate(first)}` : '');
+  }
+
+  // ---- Interaction -----------------------------------------------------------
+  main.addEventListener('click', ev => {
+    const btn = ev.target.closest('button[data-act]');
+    if (!btn) return;
+    const card = btn.closest('.ex'), exId = card.dataset.ex, ex = EX[exId], s = sel(exId);
+    const act = btn.dataset.act;
+
+    if (act === 'inc' || act === 'dec') {
+      const f = btn.dataset.field, d = act === 'inc' ? 1 : -1;
+      s[f] = f === 'plates' ? clamp(s.plates + d, 0, MAX_PLATES) : clamp(s.reps + d, 1, MAX_REPS);
+      card.querySelector(`input[data-field=${f}]`).value = s[f];
+      save(); renderCard(exId);
+    } else if (act === 'log') {
+      if (!ex.bodyweight && s.plates === 0 && !confirm('Log this set with 0 plates?')) return;
+      state.entries.push({ id: uid(), ex: exId, date: today(), t: new Date().toISOString(), plates: ex.bodyweight ? null : s.plates, reps: s.reps });
+      save(); renderCard(exId); renderStats();
+      toast(`Logged ${ex.name} · ${ex.bodyweight ? s.reps + ' reps' : s.plates + ' plates × ' + s.reps}`);
+    } else if (act === 'del') {
+      state.entries = state.entries.filter(e => e.id !== btn.dataset.id);
+      save(); renderCard(exId); renderStats();
+    }
+  });
+
+  main.addEventListener('input', ev => {
+    const inp = ev.target;
+    if (!inp.matches('input[data-field]')) return;
+    const exId = inp.closest('.ex').dataset.ex, s = sel(exId), f = inp.dataset.field;
+    const v = parseInt(inp.value, 10);
+    if (Number.isNaN(v)) return;
+    s[f] = f === 'plates' ? clamp(v, 0, MAX_PLATES) : clamp(v, 1, MAX_REPS);
+    save(); renderCard(exId);
+  });
+  main.addEventListener('focusout', ev => {   // tidy up anything odd that was typed
+    const inp = ev.target;
+    if (!inp.matches || !inp.matches('input[data-field]')) return;
+    inp.value = sel(inp.closest('.ex').dataset.ex)[inp.dataset.field];
+  });
+
+  // ---- Export ----------------------------------------------------------------
+  function formatLog(entries) {
+    const byDate = {};
+    entries.forEach(e => (byDate[e.date] = byDate[e.date] || []).push(e));
+    const dates = Object.keys(byDate).sort();
+    const lines = [`EXM-3700LP workout log`, `Exported ${nowStamp()} · ${entries.length} set${entries.length === 1 ? '' : 's'}`];
+    dates.forEach(date => {
+      lines.push('', `${date} ${dayName(date)}`);
+      const byEx = {};
+      byDate[date].sort((a, b) => a.t < b.t ? -1 : 1).forEach(e => (byEx[e.ex] = byEx[e.ex] || []).push(e));
+      Object.keys(byEx).forEach(exId => {
+        const ex = EX[exId] || { name: exId };
+        // Group consecutive sets done at the same plates: "8 plates / 80 lb × 12, 10 | 9 plates / 90 lb × 8"
+        const groups = [];
+        byEx[exId].forEach(e => {
+          const g = groups[groups.length - 1];
+          if (g && g.plates === e.plates) g.reps.push(e.reps); else groups.push({ plates: e.plates, reps: [e.reps] });
+        });
+        const parts = groups.map(g => {
+          const w = ex.bodyweight || g.plates == null ? 'bodyweight' : `${g.plates} plate${g.plates === 1 ? '' : 's'} / ${weightLabel(ex, g.plates)}`;
+          return `${w} × ${g.reps.join(', ')}`;
+        });
+        lines.push(`- ${ex.name}: ${parts.join(' | ')}`);
+      });
+    });
+    return lines.join('\n') + '\n';
+  }
+
+  async function copyText(text, what) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); toast(`Copied ${what}`); return; }
+    } catch (e) { /* try fallback */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px';
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy'); document.body.removeChild(ta);
+      if (ok) { toast(`Copied ${what}`); return; }
+    } catch (e) { /* show dialog */ }
+    const dlg = document.getElementById('fallback'), ta = document.getElementById('fallbackText');
+    ta.value = text; dlg.showModal(); ta.focus(); ta.select();
+  }
+
+  document.getElementById('copyAll').addEventListener('click', () => {
+    if (!state.entries.length) return toast('Nothing logged yet');
+    copyText(formatLog(state.entries), `${state.entries.length} set${state.entries.length === 1 ? '' : 's'}`);
+  });
+  document.getElementById('copyToday').addEventListener('click', () => {
+    const t = state.entries.filter(e => e.date === today());
+    if (!t.length) return toast('Nothing logged today');
+    copyText(formatLog(t), `today (${t.length} set${t.length === 1 ? '' : 's'})`);
+  });
+  document.getElementById('reset').addEventListener('click', () => {
+    if (!confirm(`Delete all ${state.entries.length} logged sets and your plate/rep selections?\n\nCopy the log first if you still need it.`)) return;
+    state = { entries: [], sel: {} };
+    save(); build(); toast('Reset');
+  });
+  document.getElementById('fallbackClose').addEventListener('click', () => document.getElementById('fallback').close());
+
+  let toastTimer;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  // Re-render when the app is reopened on a new day so "Today" rolls over.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) build(); });
+
+  build();
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
