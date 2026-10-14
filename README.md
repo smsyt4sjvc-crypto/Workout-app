@@ -1,6 +1,6 @@
 # EXM‑3700LP Workout Log
 
-A one‑page, offline‑capable set logger for the **Body‑Solid EXM‑3700LP** home gym (plus the GKR9 knee‑raise / dip attachment). No accounts, no server: everything is stored on the phone until you press **Reset**, and **Copy** puts the whole log on the clipboard so you can paste it here or into a notes app.
+A one‑page, offline‑capable set logger for the **Body‑Solid EXM‑3700LP** home gym (plus the GKR9 knee‑raise / dip attachment). No accounts, no server: everything is stored on the phone, and **Copy** puts the whole log on the clipboard so you can paste it here or into a notes app.
 
 ## Use it
 
@@ -12,7 +12,7 @@ A one‑page, offline‑capable set logger for the **Body‑Solid EXM‑3700LP**
 3. Set your name with the picker at the top right (it also asks the first time you copy).
 4. In the gym: pick the exercise, set **Plates** and **Reps**, tap **Log set**. Each tap records one set with today's date. Tap **×** on a set to remove it. The card shows today's sets and what you did last session. Tap the picture (or **How to ›**) for a larger photo and the numbered steps.
 5. Afterwards: **Copy all** (or **Copy today**) and paste it into the chat with Claude to be saved to your file in [`logs/`](logs/), or into your notes.
-6. **Reset** wipes the logged sets and plate/rep selections of whoever is selected. It asks first.
+6. **Reset** clears the logged sets of whoever is selected (it asks first). Each exercise keeps its last session on the card ("Last: …") and the steppers keep the weights you last used, so you can try to beat them. The routine and your place in it stay too.
 
 ## Routines
 

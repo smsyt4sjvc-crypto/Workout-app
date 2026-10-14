@@ -200,7 +200,7 @@
 <footer>
   Body‑Solid EXM‑3700LP · two 210 lb stacks in 10 lb plates · leg press 2:1<br>
   Photos and steps from the Body‑Solid G9S exercise chart (same stations). Tap a picture for the how‑to.<br>
-  Logs are saved on this device until you tap Reset. Copy them somewhere safe now and then.<br>
+  Logs are saved on this device. Reset clears them but keeps each exercise's last session to beat. Copy them somewhere safe now and then.<br>
   Each person's log and routine are separate — switch with the name at the top.
 </footer>
 
@@ -720,9 +720,10 @@
         routineSrc: typeof s.routineSrc === 'string' ? s.routineSrc : '',   // its file in routines/, '' if pasted
         progress: s.progress && typeof s.progress === 'object' ? s.progress : {},   // place in each routine's cycle
         workouts: Array.isArray(s.workouts) ? s.workouts : [],              // "Mark done" log, exported with the sets
+        kept: Array.isArray(s.kept) ? s.kept : [],                          // last session per exercise from before Reset: shown, never exported
       };
     } catch (e) { /* fall through */ }
-    return { entries: [], sel: {}, routine: '', routineSrc: '', progress: {}, workouts: [] };
+    return { entries: [], sel: {}, routine: '', routineSrc: '', progress: {}, workouts: [], kept: [] };
   }
   function save() {
     try { localStorage.setItem(people.current, JSON.stringify(state)); }
@@ -859,7 +860,7 @@
     const todayHTML = todays.length
       ? '<b>Today:</b> ' + todays.map(en => `<span class="set">${esc(setLabel(exOf(en), en))}<button type="button" data-act="del" data-id="${en.id}" aria-label="Delete set">×</button></span>`).join('')
       : '<b>Today:</b> nothing logged yet';
-    const prev = state.entries.filter(e => e.ex === exId && e.date < t);
+    const prev = state.kept.concat(state.entries).filter(e => e.ex === exId && e.date < t);
     let lastHTML = '';
     if (prev.length) {
       const lastDate = prev.reduce((m, e) => e.date > m ? e.date : m, prev[0].date);
@@ -1345,10 +1346,17 @@
     askNameOnce();
     copyText(formatLog(t, w), `today (${t.length} set${t.length === 1 ? '' : 's'})`);
   });
+  // Reset clears the log but keeps what the next session needs: each exercise's most recent session (its
+  // "Last:" line, something to beat), the weights last used, and the routine with the place in it.
+  function lastSessions(list) {
+    const latest = {};
+    list.forEach(e => { if (!latest[e.ex] || e.date > latest[e.ex]) latest[e.ex] = e.date; });
+    return list.filter(e => e.date === latest[e.ex]);
+  }
   document.getElementById('reset').addEventListener('click', () => {
     const n = state.entries.length, who = me().name ? ` for ${me().name}` : '';
-    if (!confirm(`Delete all ${n} logged set${n === 1 ? '' : 's'}${who} and the plate/rep selections?${state.routine ? ' Your routine and your place in it stay.' : ''}\n\nCopy the log first if you still need it.`)) return;
-    state = { entries: [], sel: {}, routine: state.routine, routineSrc: state.routineSrc, progress: state.progress, workouts: [] };
+    if (!confirm(`Delete all ${n} logged set${n === 1 ? '' : 's'}${who}?\n\nEach exercise keeps its last session and weights, so you can try to beat them.${state.routine ? ' Your routine and your place in it stay too.' : ''}\n\nCopy the log first if you still need it.`)) return;
+    state = Object.assign({}, state, { entries: [], workouts: [], kept: lastSessions(state.kept.concat(state.entries)) });
     save(); build(); toast('Reset');
   });
 
